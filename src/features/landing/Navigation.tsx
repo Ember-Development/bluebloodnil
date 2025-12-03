@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import { colors, containerStyle, fonts } from './shared'
 
@@ -99,6 +100,22 @@ export function Navigation() {
               {item}
             </a>
           ))}
+          <Link
+            to="/login"
+            style={{
+              color: colors.carolina,
+              textTransform: 'uppercase',
+              letterSpacing: '0.12em',
+              fontWeight: 700,
+              fontSize: 12,
+              textDecoration: 'none',
+              transition: 'color 160ms ease',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = colors.carolinaSoft)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = colors.carolina)}
+          >
+            Login
+          </Link>
           <button
             type="button"
             style={{
@@ -167,6 +184,22 @@ export function Navigation() {
               {item}
             </a>
           ))}
+          <Link
+            to="/login"
+            onClick={() => setOpen(false)}
+            style={{
+              color: colors.carolina,
+              fontFamily: fonts.display,
+              fontSize: 24,
+              textTransform: 'uppercase',
+              textDecoration: 'none',
+              marginTop: 8,
+              paddingTop: 16,
+              borderTop: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            Login
+          </Link>
         </div>
       )}
     </nav>

@@ -1,0 +1,119 @@
+.stepper-progress {
+  width: 100%;
+  margin-bottom: var(--space-2xl);
+}
+
+.stepper-progress-container {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  position: relative;
+  padding: 0 var(--space-lg);
+}
+
+.stepper-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+}
+
+.stepper-step-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-panel);
+  border: 2px solid var(--color-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-muted);
+  font-weight: 600;
+  font-size: 18px;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 2;
+}
+
+.stepper-step.active .stepper-step-circle {
+  background: #007ACC;
+  border-color: #007ACC;
+  color: white;
+  box-shadow: 0 0 0 4px rgba(0, 122, 204, 0.2);
+}
+
+.stepper-step.completed .stepper-step-circle {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: white;
+}
+
+.stepper-step-number {
+  display: block;
+}
+
+.stepper-step-content {
+  margin-top: var(--space-md);
+  text-align: center;
+  max-width: 150px;
+}
+
+.stepper-step-title {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-xs);
+}
+
+.stepper-step.active .stepper-step-title {
+  color: #007ACC;
+}
+
+.stepper-step-description {
+  display: block;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.stepper-step-connector {
+  position: absolute;
+  top: 24px;
+  left: calc(50% + 24px);
+  right: calc(-50% + 24px);
+  height: 2px;
+  background: var(--color-line);
+  z-index: 1;
+  transition: background 0.3s ease;
+}
+
+.stepper-step-connector.completed {
+  background: var(--color-success);
+}
+
+/* Hide last connector */
+.stepper-step:last-child .stepper-step-connector {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .stepper-progress-container {
+    padding: 0;
+  }
+
+  .stepper-step-content {
+    display: none;
+  }
+
+  .stepper-step-circle {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+
+  .stepper-step-connector {
+    top: 20px;
+  }
+}
+

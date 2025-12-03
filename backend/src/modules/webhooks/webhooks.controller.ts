@@ -6,13 +6,23 @@ type BombersWebhookEvent =
       type: 'athlete.created' | 'athlete.updated';
       data: {
         id: string;
+        fname: string;
+        lname: string;
         email: string;
-        name: string;
-        position?: string;
-        school?: string;
-        classYear?: number;
-        bio?: string;
-        nilScore?: number;
+        teamName?: string;
+        pos1?: string;
+        pos2?: string;
+        jerseyNum?: number;
+        gradYear?: number;
+        ageGroup?: string;
+        address?: string;
+        parentInfo?: {
+          firstName?: string;
+          lastName?: string;
+          email?: string;
+          phone?: string;
+          relationship?: string;
+        };
       };
     }
   | {
@@ -31,38 +41,92 @@ export async function handleBombersWebhook(req: Request, res: Response) {
   try {
     if (event.type === 'athlete.created' || event.type === 'athlete.updated') {
       const { data } = event;
+      const fullName = `${data.fname} ${data.lname}`.trim();
 
-      await prisma.user.upsert({
+      // Upsert user and athlete profile
+      const user = await prisma.user.upsert({
         where: { externalId: data.id },
         update: {
           email: data.email,
-          athlete: {
-            update: {
-              name: data.name,
-              position: data.position,
-              school: data.school,
-              classYear: data.classYear ?? undefined,
-              bio: data.bio,
-              nilScore: data.nilScore ?? undefined
-            }
-          }
         },
         create: {
           email: data.email,
           role: 'ATHLETE',
           externalId: data.id,
-          athlete: {
-            create: {
-              name: data.name,
-              position: data.position,
-              school: data.school,
-              classYear: data.classYear ?? undefined,
-              bio: data.bio,
-              nilScore: data.nilScore ?? undefined
-            }
+        },
+        include: {
+          athlete: true,
+        },
+      });
+
+      // Upsert athlete profile
+      const athlete = await prisma.athleteProfile.upsert({
+        where: { userId: user.id },
+        update: {
+          name: fullName,
+          firstName: data.fname,
+          lastName: data.lname,
+          position1: data.pos1,
+          position2: data.pos2,
+          teamName: data.teamName,
+          jerseyNumber: data.jerseyNum,
+          gradYear: data.gradYear,
+          classYear: data.gradYear, // Keep both for compatibility
+          ageGroup: data.ageGroup,
+          address: data.address,
+        },
+        create: {
+          userId: user.id,
+          name: fullName,
+          firstName: data.fname,
+          lastName: data.lname,
+          position1: data.pos1,
+          position2: data.pos2,
+          teamName: data.teamName,
+          jerseyNumber: data.jerseyNum,
+          gradYear: data.gradYear,
+          classYear: data.gradYear,
+          ageGroup: data.ageGroup,
+          address: data.address,
+        },
+      });
+
+      // Handle parent contact info if provided
+      if (data.parentInfo) {
+        const parentInfo = data.parentInfo;
+        if (parentInfo.firstName && parentInfo.lastName) {
+          // Check if parent contact already exists for this athlete
+          const existingParent = await prisma.parentContact.findFirst({
+            where: {
+              athleteId: athlete.id,
+              firstName: parentInfo.firstName,
+              lastName: parentInfo.lastName,
+            },
+          });
+
+          if (existingParent) {
+            await prisma.parentContact.update({
+              where: { id: existingParent.id },
+              data: {
+                email: parentInfo.email,
+                phone: parentInfo.phone,
+                relationship: parentInfo.relationship,
+              },
+            });
+          } else {
+            await prisma.parentContact.create({
+              data: {
+                athleteId: athlete.id,
+                firstName: parentInfo.firstName,
+                lastName: parentInfo.lastName,
+                email: parentInfo.email,
+                phone: parentInfo.phone,
+                relationship: parentInfo.relationship,
+              },
+            });
           }
         }
-      });
+      }
     }
 
     if (event.type === 'organization.created' || event.type === 'organization.updated') {

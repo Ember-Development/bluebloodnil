@@ -2,6 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import { json } from 'express';
 import { webhookRouter } from './modules/webhooks/webhooks.router';
+import { authRouter } from './modules/auth/auth.router';
+import { athletesRouter } from './modules/athletes/athletes.router';
+import { adminRouter } from './modules/admin/admin.router';
+import { feedRouter } from './modules/feed/feed.router';
+import { notificationsRouter } from './modules/notifications/notifications.router';
 
 export const app = express();
 
@@ -13,4 +18,9 @@ app.get('/health', (_req, res) => {
 });
 
 app.use('/webhooks', webhookRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/athletes', athletesRouter);
+app.use('/api/admin', adminRouter);
+app.use('/api/feed', feedRouter);
+app.use('/api/notifications', notificationsRouter);
 

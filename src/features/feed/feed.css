@@ -1,0 +1,470 @@
+.feed-container {
+  width: 100%;
+  min-height: 100%;
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+
+.feed-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  padding: var(--space-xl) var(--space-xl) var(--space-md);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.feed-title {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 var(--space-xs);
+}
+
+.feed-subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-muted);
+}
+
+.feed-filters {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.feed-filter-pill {
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.feed-filter-pill:hover {
+  border-color: var(--color-accentSoft);
+  color: var(--color-text);
+}
+
+.feed-filter-pill.active {
+  background: linear-gradient(90deg, var(--color-accent), var(--color-danger));
+  border-color: transparent;
+  color: var(--color-bg);
+}
+
+.feed-list {
+  padding: var(--space-xl) var(--space-xl) var(--space-2xl);
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--space-xl);
+}
+
+.feed-column {
+  display: grid;
+  gap: var(--space-md);
+  align-content: start;
+  align-items: start;
+}
+
+.feed-rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.feed-rail-card {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-line);
+  padding: var(--space-md);
+  background: radial-gradient(circle at top left, rgba(98, 183, 255, 0.12), transparent 55%),
+    linear-gradient(135deg, rgba(10, 12, 22, 0.98), rgba(6, 7, 12, 0.98));
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+}
+
+.feed-rail-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.feed-rail-text {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Trending Athletes */
+.feed-rail-athletes {
+  display: grid;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.feed-rail-athlete {
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.feed-rail-athlete:hover {
+  background: rgba(98, 183, 255, 0.08);
+  border-color: rgba(98, 183, 255, 0.3);
+}
+
+.feed-rail-athlete-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid var(--color-accentSoft);
+  flex-shrink: 0;
+}
+
+.feed-rail-athlete-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.feed-rail-athlete-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+  color: var(--color-text);
+}
+
+.feed-rail-athlete-meta {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  margin-bottom: 4px;
+}
+
+.feed-rail-athlete-activity {
+  font-size: 0.8rem;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
+
+.feed-rail-athlete-score {
+  font-size: 0.75rem;
+  color: var(--color-accentSoft);
+  font-weight: 600;
+}
+
+/* Featured Campaign */
+/* .feed-rail-campaign {
+  border-color: rgba(246, 196, 83, 0.4);
+} */
+
+.feed-rail-campaign-header {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  margin-bottom: var(--space-sm);
+}
+
+.feed-rail-campaign-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  object-fit: cover;
+  background-color: var(--color-muted);
+  flex-shrink: 0;
+}
+
+.feed-rail-campaign-brand {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.feed-rail-campaign-title {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+.feed-rail-campaign-objective {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  margin: var(--space-sm) 0;
+  line-height: 1.5;
+}
+
+.feed-rail-campaign-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+  margin: var(--space-sm) 0;
+  padding: var(--space-sm);
+  background: rgba(98, 183, 255, 0.08);
+  border-radius: var(--radius-sm);
+}
+
+.feed-rail-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.feed-rail-metric-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-muted);
+}
+
+.feed-rail-metric-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-accentSoft);
+}
+
+.feed-rail-campaign-status {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-pill);
+  display: inline-block;
+  margin-top: var(--space-xs);
+}
+
+.feed-rail-campaign-status.status-live {
+  background: rgba(98, 183, 255, 0.2);
+  color: var(--color-accentSoft);
+}
+
+.feed-rail-campaign-status.status-wrapped {
+  background: rgba(148, 163, 184, 0.2);
+  color: var(--color-muted);
+}
+
+.feed-rail-campaign-status.status-planning {
+  background: rgba(246, 196, 83, 0.2);
+  color: var(--color-warning);
+}
+
+/* AI Chatbot CTA */
+.feed-rail-chatbot {
+  background: radial-gradient(circle at top left, rgba(226, 61, 61, 0.12), transparent 55%),
+    linear-gradient(135deg, rgba(10, 12, 22, 0.98), rgba(6, 7, 12, 0.98));
+}
+
+.feed-rail-chatbot-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  margin-top: var(--space-md);
+  background: linear-gradient(90deg, var(--color-accent), var(--color-danger));
+  color: var(--color-bg);
+  border: none;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.feed-rail-chatbot-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(98, 183, 255, 0.4);
+}
+
+.feed-rail-chatbot-btn svg {
+  flex-shrink: 0;
+}
+
+.feed-card {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-line);
+  padding: var(--space-md);
+  background: radial-gradient(circle at top left, rgba(98, 183, 255, 0.12), transparent 55%),
+    linear-gradient(135deg, rgba(10, 12, 22, 0.98), rgba(6, 7, 12, 0.98));
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7);
+}
+
+.feed-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.feed-card-author {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.feed-card-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid var(--color-accentSoft);
+}
+
+.feed-card-author-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.feed-card-author-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.feed-card-dot {
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+
+.feed-card-time {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+.feed-card-author-meta {
+  font-size: 0.78rem;
+  color: var(--color-muted);
+}
+
+.feed-card-pill {
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.feed-card-body {
+  margin-bottom: var(--space-md);
+}
+
+.feed-card-headline {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-xs);
+}
+
+.feed-card-text {
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.feed-card-statline {
+  margin-top: var(--space-sm);
+  font-size: 0.85rem;
+  color: var(--color-accentSoft);
+}
+
+.feed-card-campaign-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--space-sm);
+}
+
+.feed-card-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.feed-card-brand-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  object-fit: cover;
+  background-color: var(--color-muted);
+}
+
+.feed-card-status {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.status-planning {
+  color: var(--color-warning);
+}
+
+.status-live {
+  color: var(--color-accentSoft);
+}
+
+.status-wrapped {
+  color: var(--color-muted);
+}
+
+.feed-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.feed-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.feed-card-tag {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+}
+
+.feed-card-athlete {
+  border-color: rgba(98, 183, 255, 0.4);
+}
+
+.feed-card-campaign {
+  border-color: rgba(246, 196, 83, 0.5);
+}
+
+.feed-card-org {
+  border-color: rgba(148, 163, 184, 0.6);
+}
+
+.feed-card-commitment {
+  border-color: rgba(226, 61, 61, 0.7);
+}
+
+@media (max-width: 768px) {
+  .feed-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .feed-list {
+    grid-template-columns: 1fr;
+  }
+
+  .feed-rail {
+    order: -1;
+  }
+}

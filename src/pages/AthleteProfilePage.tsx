@@ -1,9 +1,5 @@
-export function AthleteProfilePage() {
-  return (
-    <section>
-      <h1>Athlete Profile</h1>
-      <p>Detailed profile view for a single athlete.</p>
-    </section>
-  )
-}
+import { AthleteProfile } from '../features/athlete-profile';
 
+export function AthleteProfilePage() {
+  return <AthleteProfile />;
+}

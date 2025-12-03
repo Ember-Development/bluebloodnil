@@ -1,9 +1,6 @@
+import { AdminDashboard } from '../features/admin';
+
 export function AdminDashboardPage() {
-  return (
-    <section>
-      <h1>Admin Dashboard</h1>
-      <p>Key metrics, campaigns, and recent activity.</p>
-    </section>
-  )
+  return <AdminDashboard />;
 }
 

@@ -1,4 +1,4 @@
-import type { AthleteListItem } from '../athletes/types';
+import type { AthleteListItem } from "../athletes/types";
 
 export interface AdminMetrics {
   totalAthletes: number;
@@ -16,7 +16,7 @@ export interface AdminMetrics {
 
 export interface AdminAthlete extends AthleteListItem {
   email?: string;
-  status: 'active' | 'inactive' | 'pending';
+  status: "active" | "inactive" | "pending";
   lastActive?: string;
 }
 
@@ -25,11 +25,12 @@ export interface Brand {
   name: string;
   logoUrl?: string;
   tier?: string;
+  category?: string;
   contactEmail?: string;
   contactName?: string;
   campaignsCount: number;
   createdAt: string;
-  status: 'active' | 'inactive';
+  status: "active" | "inactive";
 }
 
 export interface AdminTodo {
@@ -41,31 +42,33 @@ export interface AdminTodo {
   assignedBy: string; // admin name
   assignedDate: string;
   dueDate: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'overdue';
-  priority: 'low' | 'medium' | 'high';
+  status: "pending" | "in_progress" | "completed" | "overdue";
+  priority: "low" | "medium" | "high";
   campaignId?: string;
 }
 
 export type CampaignType =
-  | 'SOCIAL_MEDIA_POST'
-  | 'COMMERCIAL_VIDEO'
-  | 'IN_PERSON_APPEARANCE'
-  | 'PRODUCT_ENDORSEMENT'
-  | 'AUTOGRAPH_SIGNING'
-  | 'SPEAKING_ENGAGEMENT'
-  | 'PHOTO_SHOOT'
-  | 'PARTNERSHIP';
+  | "SOCIAL_MEDIA_POST"
+  | "COMMERCIAL_VIDEO"
+  | "IN_PERSON_APPEARANCE"
+  | "PRODUCT_ENDORSEMENT"
+  | "AUTOGRAPH_SIGNING"
+  | "SPEAKING_ENGAGEMENT"
+  | "PHOTO_SHOOT"
+  | "PARTNERSHIP";
 
-export type EarningsSplitMethod = 'EQUAL' | 'CUSTOM';
+export type EarningsSplitMethod = "EQUAL" | "CUSTOM";
 
 export interface Campaign {
   id: string;
   title: string;
   description?: string | null;
   type: CampaignType;
-  status: 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'ARCHIVED';
+  status: "DRAFT" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
   isOpen: boolean;
   address?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
   totalEarnings?: number | null;
   earningsSplitMethod: EarningsSplitMethod;
   organization: {
@@ -88,7 +91,7 @@ export interface Campaign {
 }
 
 export interface FeedPostForm {
-  type: 'athlete_update' | 'campaign' | 'org_announcement' | 'commitment';
+  type: "athlete_update" | "campaign" | "org_announcement" | "commitment";
   headline: string;
   body: string;
   tags: string[];
@@ -102,15 +105,14 @@ export interface FeedPostForm {
   brandLogoUrl?: string;
   objective?: string; // for campaign
   program?: string; // for commitment
-  level?: 'D1' | 'D2' | 'NAIA' | 'JUCO' | 'HS' | 'Club';
+  level?: "D1" | "D2" | "NAIA" | "JUCO" | "HS" | "Club";
 }
 
 export interface NotificationForm {
   title: string;
   message: string;
-  targetAudience: 'all' | 'athletes' | 'brands' | 'specific';
+  targetAudience: "all" | "athletes" | "brands" | "specific";
   targetIds?: string[]; // for specific audience
-  priority: 'low' | 'medium' | 'high';
+  priority: "low" | "medium" | "high";
   scheduledFor?: string; // optional scheduling
 }
-

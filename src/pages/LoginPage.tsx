@@ -1,19 +1,20 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { apiClient } from '../lib/apiClient';
-import './LoginPage.css';
+import { useState } from "react";
+import { apiClient } from "../lib/apiClient";
+import "./LoginPage.css";
 
 export function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const navigate = useNavigate();
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email.trim()) {
-      setMessage({ type: 'error', text: 'Please enter your email address' });
+      setMessage({ type: "error", text: "Please enter your email address" });
       return;
     }
 
@@ -21,17 +22,20 @@ export function LoginPage() {
     setMessage(null);
 
     try {
-      await apiClient.post('/api/auth/login', { email });
+      await apiClient.post("/api/auth/login", { email });
       setMessage({
-        type: 'success',
-        text: 'Check your email for a magic link to sign in!',
+        type: "success",
+        text: "Check your email for a magic link to sign in!",
       });
-      setEmail('');
+      setEmail("");
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
       setMessage({
-        type: 'error',
-        text: error instanceof Error ? error.message : 'Failed to send magic link. Please try again.',
+        type: "error",
+        text:
+          error instanceof Error
+            ? error.message
+            : "Failed to send magic link. Please try again.",
       });
     } finally {
       setLoading(false);
@@ -61,13 +65,11 @@ export function LoginPage() {
           </div>
 
           {message && (
-            <div className={`message ${message.type}`}>
-              {message.text}
-            </div>
+            <div className={`message ${message.type}`}>{message.text}</div>
           )}
 
           <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Sending...' : 'Send Magic Link'}
+            {loading ? "Sending..." : "Send Magic Link"}
           </button>
         </form>
 
@@ -83,4 +85,3 @@ export function LoginPage() {
     </div>
   );
 }
-

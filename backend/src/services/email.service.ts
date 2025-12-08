@@ -1,65 +1,37 @@
-import nodemailer from 'nodemailer';
+import { Resend } from "resend";
 
 /**
  * Email service for sending magic link emails
  * Supports Gmail, SMTP, or console logging for development
  */
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const EMAIL_FROM = process.env.EMAIL_FROM || "onboarding@resend.dev"; // Use your verified domain
 
-// Email configuration from environment variables
-const EMAIL_ENABLED = process.env.EMAIL_ENABLED === 'true';
-const EMAIL_HOST = process.env.EMAIL_HOST;
-const EMAIL_PORT = parseInt(process.env.EMAIL_PORT || '587');
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
-const EMAIL_FROM = process.env.EMAIL_FROM || EMAIL_USER || 'noreply@bluebloodnil.com';
-
-// Create transporter if email is configured
-let transporter: nodemailer.Transporter | null = null;
-
-if (EMAIL_ENABLED && EMAIL_HOST && EMAIL_USER && EMAIL_PASSWORD) {
-  transporter = nodemailer.createTransport({
-    host: EMAIL_HOST,
-    port: EMAIL_PORT,
-    secure: EMAIL_PORT === 465, // true for 465, false for other ports
-    auth: {
-      user: EMAIL_USER,
-      pass: EMAIL_PASSWORD,
-    },
-  });
-} else if (EMAIL_ENABLED && EMAIL_USER && EMAIL_PASSWORD) {
-  // Gmail configuration (using app password)
-  transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: EMAIL_USER,
-      pass: EMAIL_PASSWORD,
-    },
-  });
-}
+const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
 export async function sendMagicLinkEmail(email: string, token: string) {
   const magicLink = `${FRONTEND_URL}/auth/verify/${token}`;
 
   // Always log to console for development visibility
-  console.log('\n📧 ====================================');
-  console.log('MAGIC LINK EMAIL (Development/Console)');
-  console.log('====================================');
+  console.log("\n📧 ====================================");
+  console.log("MAGIC LINK EMAIL (Development/Console)");
+  console.log("====================================");
   console.log(`To: ${email}`);
   console.log(`Subject: Sign in to BlueBloods NIL`);
-  console.log('\nClick the link below to sign in:');
+  console.log("\nClick the link below to sign in:");
   console.log(magicLink);
-  console.log('\nThis link will expire in 15 minutes.');
-  console.log('====================================\n');
+  console.log("\nThis link will expire in 15 minutes.");
+  console.log("====================================\n");
 
-  // If transporter is configured, also send real email
-  if (transporter) {
+  // If Resend is configured, send real email
+  if (resend) {
     try {
-      await transporter.sendMail({
+      const { data, error } = await resend.emails.send({
         from: EMAIL_FROM,
         to: email,
-        subject: 'Sign in to BlueBloods NIL',
+        subject: "Sign in to BlueBloods NIL",
         html: `
           <!DOCTYPE html>
           <html>
@@ -111,19 +83,26 @@ export async function sendMagicLinkEmail(email: string, token: string) {
         `,
       });
 
-      console.log(`✅ Magic link email also sent via email service to ${email}`);
+      if (error) {
+        console.error("❌ Resend error:", error);
+        throw error;
+      }
+
+      console.log(
+        `✅ Magic link email sent via Resend to ${email} (ID: ${data?.id})`
+      );
     } catch (error) {
-      console.error('❌ Failed to send email via email service:', error);
-      console.log('💡 Email was logged to console above - copy the link to test.');
+      console.error("❌ Failed to send email via Resend:", error);
+      console.log(
+        "💡 Email was logged to console above - copy the link to test."
+      );
     }
   } else {
-    console.log('💡 To enable real email sending, set these environment variables:');
-    console.log('   EMAIL_ENABLED=true');
-    console.log('   EMAIL_USER=your-email@gmail.com');
-    console.log('   EMAIL_PASSWORD=your-app-password');
-    console.log('   (For Gmail, use an App Password, not your regular password)\n');
+    console.log(
+      "💡 To enable real email sending, set RESEND_API_KEY in your .env file"
+    );
+    console.log("   Get your API key at: https://resend.com/api-keys\n");
   }
 
   return { success: true };
 }
-

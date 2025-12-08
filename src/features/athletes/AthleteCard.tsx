@@ -1,20 +1,20 @@
-import { Link } from 'react-router-dom'
-import type { AthleteListItem } from './types'
+import { Link } from "react-router-dom";
+import type { AthleteListItem } from "./types";
 
 interface AthleteCardProps {
-  athlete: AthleteListItem
+  athlete: AthleteListItem;
 }
 
 export function AthleteCard({ athlete }: AthleteCardProps) {
   return (
     <Link to={athlete.profileUrl} className="athlete-card">
       <div className="athlete-card-header">
-        <img src={athlete.avatarUrl} alt={athlete.name} className="athlete-card-avatar" />
-        <div className="athlete-card-badge">
-          {athlete.nilScore && (
-            <span className="athlete-card-nil-score">{athlete.nilScore}</span>
-          )}
-        </div>
+        <img
+          src={athlete.avatarUrl}
+          alt={athlete.name}
+          className="athlete-card-avatar"
+        />
+        <div className="athlete-card-badge">{/* Remove NIL Score badge */}</div>
       </div>
       <div className="athlete-card-body">
         <h3 className="athlete-card-name">{athlete.name}</h3>
@@ -47,16 +47,19 @@ export function AthleteCard({ athlete }: AthleteCardProps) {
           {athlete.avgEngagement && (
             <div className="athlete-card-stat">
               <span className="athlete-card-stat-label">Engagement</span>
-              <span className="athlete-card-stat-value">{athlete.avgEngagement}%</span>
+              <span className="athlete-card-stat-value">
+                {athlete.avgEngagement}%
+              </span>
             </div>
           )}
           <div className="athlete-card-stat">
             <span className="athlete-card-stat-label">Campaigns</span>
-            <span className="athlete-card-stat-value">{athlete.campaignsCount}</span>
+            <span className="athlete-card-stat-value">
+              {athlete.campaignsCount}
+            </span>
           </div>
         </div>
       </div>
     </Link>
-  )
+  );
 }
-

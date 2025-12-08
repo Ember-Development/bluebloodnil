@@ -16,17 +16,24 @@
     "seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.946.0",
+    "@aws-sdk/s3-request-presigner": "^3.946.0",
     "@prisma/client": "^5.18.0",
-    "@types/nodemailer": "^7.0.4",
+    "axios": "^1.13.2",
+    "cheerio": "^1.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.0",
     "express": "^4.21.0",
-    "nodemailer": "^7.0.11"
+    "node-cron": "^3.0.3",
+    "puppeteer": "^21.6.1",
+    "resend": "^6.5.2",
+    "user-agents": "^1.0.1400"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^4.17.21",
     "@types/node": "^20.11.0",
+    "@types/node-cron": "^3.0.11",
     "prisma": "^5.18.0",
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.20.6",

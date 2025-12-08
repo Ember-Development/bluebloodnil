@@ -1,10 +1,10 @@
-import { Request, Response } from 'express';
-import { prisma } from '../../config/prisma';
-import { AuthRequest } from '../../middleware/auth.middleware';
+import { Request, Response } from "express";
+import { prisma } from "../../config/prisma";
+import { AuthRequest } from "../../middleware/auth.middleware";
 
 export async function getPublicOrganizations(req: Request, res: Response) {
   try {
-    console.log('getPublicOrganizations called');
+    console.log("getPublicOrganizations called");
     const organizations = await prisma.organization.findMany({
       include: {
         _count: {
@@ -20,7 +20,7 @@ export async function getPublicOrganizations(req: Request, res: Response) {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     console.log(`Found ${organizations.length} organizations`);
@@ -28,8 +28,8 @@ export async function getPublicOrganizations(req: Request, res: Response) {
     const organizationsWithAthletes = organizations.map((org) => {
       // Count unique athletes across all campaigns for this organization
       const uniqueAthletes = new Set(
-        org.campaigns.flatMap(campaign => 
-          campaign.participants.map(p => p.athleteId)
+        org.campaigns.flatMap((campaign) =>
+          campaign.participants.map((p) => p.athleteId)
         )
       );
 
@@ -47,15 +47,15 @@ export async function getPublicOrganizations(req: Request, res: Response) {
     console.log(`Returning ${organizationsWithAthletes.length} organizations`);
     res.json(organizationsWithAthletes);
   } catch (error) {
-    console.error('Get public organizations error:', error);
-    res.status(500).json({ error: 'Failed to fetch organizations' });
+    console.error("Get public organizations error:", error);
+    res.status(500).json({ error: "Failed to fetch organizations" });
   }
 }
 
 export async function getMyProfile(req: AuthRequest, res: Response) {
   try {
     if (!req.user?.athleteId) {
-      return res.status(404).json({ error: 'Athlete profile not found' });
+      return res.status(404).json({ error: "Athlete profile not found" });
     }
 
     const athlete = await prisma.athleteProfile.findUnique({
@@ -68,24 +68,21 @@ export async function getMyProfile(req: AuthRequest, res: Response) {
     });
 
     if (!athlete) {
-      return res.status(404).json({ error: 'Athlete profile not found' });
+      return res.status(404).json({ error: "Athlete profile not found" });
     }
 
     res.json(athlete);
   } catch (error) {
-    console.error('Get profile error:', error);
-    res.status(500).json({ error: 'Failed to fetch profile' });
+    console.error("Get profile error:", error);
+    res.status(500).json({ error: "Failed to fetch profile" });
   }
 }
 
 export async function getAllAthletes(req: Request, res: Response) {
   try {
-    // Get all athletes with completed profiles (public view)
+    // Get all athletes (public view)
     // For admin, we also include brandFitSummary and scenarioIdeas
     const athletes = await prisma.athleteProfile.findMany({
-      where: {
-        profileComplete: true,
-      },
       include: {
         socialProfiles: true,
         interests: true,
@@ -97,14 +94,14 @@ export async function getAllAthletes(req: Request, res: Response) {
         },
       },
       orderBy: {
-        name: 'asc',
+        name: "asc",
       },
     });
 
     res.json(athletes);
   } catch (error) {
-    console.error('Get all athletes error:', error);
-    res.status(500).json({ error: 'Failed to fetch athletes' });
+    console.error("Get all athletes error:", error);
+    res.status(500).json({ error: "Failed to fetch athletes" });
   }
 }
 
@@ -122,7 +119,7 @@ export async function getAthleteById(req: Request, res: Response) {
         contents: true,
         milestones: {
           orderBy: {
-            date: 'desc', // Most recent first
+            date: "desc", // Most recent first
           },
         },
         participants: {
@@ -137,6 +134,7 @@ export async function getAthleteById(req: Request, res: Response) {
                 description: true,
                 status: true,
                 createdAt: true,
+                results: true, // Add this line
                 organization: {
                   select: {
                     id: true,
@@ -152,20 +150,20 @@ export async function getAthleteById(req: Request, res: Response) {
     });
 
     if (!athlete) {
-      return res.status(404).json({ error: 'Athlete not found' });
+      return res.status(404).json({ error: "Athlete not found" });
     }
 
     res.json(athlete);
   } catch (error) {
-    console.error('Get athlete by ID error:', error);
-    res.status(500).json({ error: 'Failed to fetch athlete' });
+    console.error("Get athlete by ID error:", error);
+    res.status(500).json({ error: "Failed to fetch athlete" });
   }
 }
 
 export async function updateMyProfile(req: AuthRequest, res: Response) {
   try {
     if (!req.user?.athleteId) {
-      return res.status(404).json({ error: 'Athlete profile not found' });
+      return res.status(404).json({ error: "Athlete profile not found" });
     }
 
     const {
@@ -177,6 +175,7 @@ export async function updateMyProfile(req: AuthRequest, res: Response) {
       videoUrl,
       position,
       school,
+      highSchool,
     } = req.body;
 
     const athlete = await prisma.athleteProfile.update({
@@ -190,6 +189,7 @@ export async function updateMyProfile(req: AuthRequest, res: Response) {
         videoUrl,
         position: position || primaryPosition,
         school,
+        highSchool,
       },
       include: {
         socialProfiles: true,
@@ -199,22 +199,22 @@ export async function updateMyProfile(req: AuthRequest, res: Response) {
 
     res.json(athlete);
   } catch (error) {
-    console.error('Update profile error:', error);
-    res.status(500).json({ error: 'Failed to update profile' });
+    console.error("Update profile error:", error);
+    res.status(500).json({ error: "Failed to update profile" });
   }
 }
 
 export async function updateSocialProfiles(req: AuthRequest, res: Response) {
   try {
     if (!req.user?.athleteId) {
-      return res.status(404).json({ error: 'Athlete profile not found' });
+      return res.status(404).json({ error: "Athlete profile not found" });
     }
 
     const athleteId = req.user.athleteId;
     const { socialProfiles } = req.body; // Array of social profile objects
 
     if (!Array.isArray(socialProfiles)) {
-      return res.status(400).json({ error: 'socialProfiles must be an array' });
+      return res.status(400).json({ error: "socialProfiles must be an array" });
     }
 
     // Delete existing social profiles
@@ -239,24 +239,79 @@ export async function updateSocialProfiles(req: AuthRequest, res: Response) {
       )
     );
 
+    // Trigger scraping for new profiles (async, don't wait)
+    if (process.env.SCRAPING_ENABLED !== "false") {
+      const { socialScraperService } = await import(
+        "../../services/social-scraper.service"
+      );
+      socialProfiles.forEach((profile, index) => {
+        if (profile.handle) {
+          // Delay each scrape to avoid rate limiting
+          setTimeout(() => {
+            socialScraperService
+              .scrapeProfile(
+                createdProfiles[index].id,
+                profile.platform,
+                profile.handle
+              )
+              .catch((error) => {
+                console.error(
+                  `Failed to scrape ${profile.platform} for ${profile.handle}:`,
+                  error
+                );
+              });
+          }, index * 5000); // 5 second delay between each
+        }
+      });
+    }
+
     res.json({ socialProfiles: createdProfiles });
   } catch (error) {
-    console.error('Update social profiles error:', error);
-    res.status(500).json({ error: 'Failed to update social profiles' });
+    console.error("Update social profiles error:", error);
+    res.status(500).json({ error: "Failed to update social profiles" });
+  }
+}
+
+export async function refreshSocialProfileMetrics(
+  req: AuthRequest,
+  res: Response
+) {
+  try {
+    if (!req.user?.athleteId) {
+      return res.status(404).json({ error: "Athlete profile not found" });
+    }
+
+    const athleteId = req.user.athleteId;
+    const { socialScraperService } = await import(
+      "../../services/social-scraper.service"
+    );
+
+    // Scrape all profiles for this athlete
+    await socialScraperService.scrapeAllProfilesForAthlete(athleteId);
+
+    // Fetch updated profiles
+    const profiles = await prisma.athleteSocialProfile.findMany({
+      where: { athleteId },
+    });
+
+    res.json({ socialProfiles: profiles });
+  } catch (error) {
+    console.error("Refresh social profile metrics error:", error);
+    res.status(500).json({ error: "Failed to refresh social profile metrics" });
   }
 }
 
 export async function updateInterests(req: AuthRequest, res: Response) {
   try {
     if (!req.user?.athleteId) {
-      return res.status(404).json({ error: 'Athlete profile not found' });
+      return res.status(404).json({ error: "Athlete profile not found" });
     }
 
     const athleteId = req.user.athleteId;
     const { interests } = req.body; // Array of interest objects with label and color
 
     if (!Array.isArray(interests)) {
-      return res.status(400).json({ error: 'interests must be an array' });
+      return res.status(400).json({ error: "interests must be an array" });
     }
 
     // Delete existing interests
@@ -279,15 +334,15 @@ export async function updateInterests(req: AuthRequest, res: Response) {
 
     res.json({ interests: createdInterests });
   } catch (error) {
-    console.error('Update interests error:', error);
-    res.status(500).json({ error: 'Failed to update interests' });
+    console.error("Update interests error:", error);
+    res.status(500).json({ error: "Failed to update interests" });
   }
 }
 
 export async function completeOnboarding(req: AuthRequest, res: Response) {
   try {
     if (!req.user?.athleteId) {
-      return res.status(404).json({ error: 'Athlete profile not found' });
+      return res.status(404).json({ error: "Athlete profile not found" });
     }
 
     const athlete = await prisma.athleteProfile.update({
@@ -303,15 +358,15 @@ export async function completeOnboarding(req: AuthRequest, res: Response) {
 
     res.json({ success: true, athlete });
   } catch (error) {
-    console.error('Complete onboarding error:', error);
-    res.status(500).json({ error: 'Failed to complete onboarding' });
+    console.error("Complete onboarding error:", error);
+    res.status(500).json({ error: "Failed to complete onboarding" });
   }
 }
 
 export async function createMilestone(req: AuthRequest, res: Response) {
   try {
     if (!req.user?.athleteId) {
-      return res.status(404).json({ error: 'Athlete profile not found' });
+      return res.status(404).json({ error: "Athlete profile not found" });
     }
 
     const { title, date, description } = req.body as {
@@ -321,13 +376,13 @@ export async function createMilestone(req: AuthRequest, res: Response) {
     };
 
     if (!title || !date) {
-      return res.status(400).json({ error: 'Title and date are required' });
+      return res.status(400).json({ error: "Title and date are required" });
     }
 
     // Parse date string to DateTime
     const dateObj = new Date(date);
     if (isNaN(dateObj.getTime())) {
-      return res.status(400).json({ error: 'Invalid date format' });
+      return res.status(400).json({ error: "Invalid date format" });
     }
 
     const milestone = await prisma.milestone.create({
@@ -341,33 +396,33 @@ export async function createMilestone(req: AuthRequest, res: Response) {
 
     res.json(milestone);
   } catch (error) {
-    console.error('Create milestone error:', error);
-    res.status(500).json({ error: 'Failed to create milestone' });
+    console.error("Create milestone error:", error);
+    res.status(500).json({ error: "Failed to create milestone" });
   }
 }
 
 export async function getMyTodos(req: AuthRequest, res: Response) {
   try {
     if (!req.user?.athleteId) {
-      return res.status(404).json({ error: 'Athlete profile not found' });
+      return res.status(404).json({ error: "Athlete profile not found" });
     }
 
     const todos = await prisma.todo.findMany({
       where: { athleteId: req.user.athleteId },
-      orderBy: { dueDate: 'asc' },
+      orderBy: { dueDate: "asc" },
     });
 
     res.json(todos);
   } catch (error) {
-    console.error('Get my todos error:', error);
-    res.status(500).json({ error: 'Failed to fetch todos' });
+    console.error("Get my todos error:", error);
+    res.status(500).json({ error: "Failed to fetch todos" });
   }
 }
 
 export async function verifyTodo(req: AuthRequest, res: Response) {
   try {
     if (!req.user?.athleteId) {
-      return res.status(404).json({ error: 'Athlete profile not found' });
+      return res.status(404).json({ error: "Athlete profile not found" });
     }
 
     const { id } = req.params;
@@ -385,11 +440,13 @@ export async function verifyTodo(req: AuthRequest, res: Response) {
     });
 
     if (!todo) {
-      return res.status(404).json({ error: 'Todo not found' });
+      return res.status(404).json({ error: "Todo not found" });
     }
 
     if (!verificationUrl && !verificationNotes) {
-      return res.status(400).json({ error: 'Verification URL or notes are required' });
+      return res
+        .status(400)
+        .json({ error: "Verification URL or notes are required" });
     }
 
     // Update todo with verification
@@ -399,28 +456,28 @@ export async function verifyTodo(req: AuthRequest, res: Response) {
         verificationUrl: verificationUrl || null,
         verificationNotes: verificationNotes || null,
         verifiedAt: new Date(),
-        status: 'completed', // Auto-complete when verified
+        status: "completed", // Auto-complete when verified
       },
     });
 
     res.json(updatedTodo);
   } catch (error) {
-    console.error('Verify todo error:', error);
-    res.status(500).json({ error: 'Failed to verify todo' });
+    console.error("Verify todo error:", error);
+    res.status(500).json({ error: "Failed to verify todo" });
   }
 }
 
 export async function getAvailableCampaigns(req: AuthRequest, res: Response) {
   try {
     if (!req.user?.athleteId) {
-      return res.status(404).json({ error: 'Athlete profile not found' });
+      return res.status(404).json({ error: "Athlete profile not found" });
     }
 
     // Get campaigns that are open and active
     const campaigns = await prisma.campaign.findMany({
       where: {
         isOpen: true,
-        status: 'ACTIVE',
+        status: "ACTIVE",
         // Exclude campaigns the athlete is already part of
         participants: {
           none: {
@@ -443,13 +500,13 @@ export async function getAvailableCampaigns(req: AuthRequest, res: Response) {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     res.json(campaigns);
   } catch (error) {
-    console.error('Get available campaigns error:', error);
-    res.status(500).json({ error: 'Failed to fetch available campaigns' });
+    console.error("Get available campaigns error:", error);
+    res.status(500).json({ error: "Failed to fetch available campaigns" });
   }
 }
 
@@ -461,17 +518,20 @@ export async function getAthleteFeedPosts(req: Request, res: Response) {
       where: {
         athleteId: id,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: 50, // Limit to most recent 50 posts
     });
 
     // Transform to match frontend FeedItem format
     const transformedItems = feedPosts.map((post) => {
-      const typeMap: Record<string, 'athlete_update' | 'campaign' | 'org_announcement' | 'commitment'> = {
-        ATHLETE_UPDATE: 'athlete_update',
-        CAMPAIGN: 'campaign',
-        ORG_ANNOUNCEMENT: 'org_announcement',
-        COMMITMENT: 'commitment',
+      const typeMap: Record<
+        string,
+        "athlete_update" | "campaign" | "org_announcement" | "commitment"
+      > = {
+        ATHLETE_UPDATE: "athlete_update",
+        CAMPAIGN: "campaign",
+        ORG_ANNOUNCEMENT: "org_announcement",
+        COMMITMENT: "commitment",
       };
 
       const now = new Date();
@@ -482,7 +542,7 @@ export async function getAthleteFeedPosts(req: Request, res: Response) {
       const diffWeeks = Math.floor(diffDays / 7);
       const diffMonths = Math.floor(diffDays / 30);
 
-      let timeAgo = 'just now';
+      let timeAgo = "just now";
       if (diffMins >= 1 && diffMins < 60) timeAgo = `${diffMins}m ago`;
       else if (diffHours < 24) timeAgo = `${diffHours}h ago`;
       else if (diffDays < 7) timeAgo = `${diffDays}d ago`;
@@ -492,14 +552,14 @@ export async function getAthleteFeedPosts(req: Request, res: Response) {
 
       const base = {
         id: post.id,
-        type: typeMap[post.type] || 'org_announcement',
+        type: typeMap[post.type] || "org_announcement",
         createdAt: post.createdAt.toISOString(),
         timeAgo,
         author: {
-          id: post.authorId || 'system',
+          id: post.authorId || "system",
           name: post.authorName,
           role: post.authorRole,
-          avatarUrl: post.authorAvatarUrl || 'https://placehold.co/64x64',
+          avatarUrl: post.authorAvatarUrl || "https://placehold.co/64x64",
           org: post.authorOrg || undefined,
         },
         headline: post.headline,
@@ -507,54 +567,63 @@ export async function getAthleteFeedPosts(req: Request, res: Response) {
         tags: post.tags,
       };
 
-      if (post.type === 'CAMPAIGN') {
+      if (post.type === "CAMPAIGN") {
         return {
           ...base,
-          type: 'campaign' as const,
-          brand: post.brand || '',
-          brandLogoUrl: post.brandLogoUrl || 'https://placehold.co/56x56',
-          objective: post.objective || '',
-          status: (post.campaignStatus || 'planning') as 'planning' | 'live' | 'wrapped',
+          type: "campaign" as const,
+          brand: post.brand || "",
+          brandLogoUrl: post.brandLogoUrl || "https://placehold.co/56x56",
+          objective: post.objective || "",
+          status: (post.campaignStatus || "planning") as
+            | "planning"
+            | "live"
+            | "wrapped",
           campaignId: post.campaignId || undefined,
           isOpen: post.isOpen || undefined,
         };
       }
 
-      if (post.type === 'ATHLETE_UPDATE') {
+      if (post.type === "ATHLETE_UPDATE") {
         return {
           ...base,
-          type: 'athlete_update' as const,
+          type: "athlete_update" as const,
           statLine: post.statLine || undefined,
           mediaUrl: post.mediaUrl || undefined,
         };
       }
 
-      if (post.type === 'COMMITMENT') {
+      if (post.type === "COMMITMENT") {
         return {
           ...base,
-          type: 'commitment' as const,
-          program: post.program || '',
-          level: (post.level || 'D1') as 'D1' | 'D2' | 'NAIA' | 'JUCO' | 'HS' | 'Club',
+          type: "commitment" as const,
+          program: post.program || "",
+          level: (post.level || "D1") as
+            | "D1"
+            | "D2"
+            | "NAIA"
+            | "JUCO"
+            | "HS"
+            | "Club",
         };
       }
 
       return {
         ...base,
-        type: 'org_announcement' as const,
+        type: "org_announcement" as const,
       };
     });
 
     res.json(transformedItems);
   } catch (error) {
-    console.error('Get athlete feed posts error:', error);
-    res.status(500).json({ error: 'Failed to fetch athlete feed posts' });
+    console.error("Get athlete feed posts error:", error);
+    res.status(500).json({ error: "Failed to fetch athlete feed posts" });
   }
 }
 
 export async function applyToCampaign(req: AuthRequest, res: Response) {
   try {
     if (!req.user?.athleteId) {
-      return res.status(404).json({ error: 'Athlete profile not found' });
+      return res.status(404).json({ error: "Athlete profile not found" });
     }
 
     const { id } = req.params;
@@ -573,20 +642,25 @@ export async function applyToCampaign(req: AuthRequest, res: Response) {
     });
 
     if (!campaign) {
-      return res.status(404).json({ error: 'Campaign not found' });
+      return res.status(404).json({ error: "Campaign not found" });
     }
 
     if (!campaign.isOpen) {
-      return res.status(400).json({ error: 'Campaign is not open for applications' });
+      return res
+        .status(400)
+        .json({ error: "Campaign is not open for applications" });
     }
 
-    if (campaign.status !== 'ACTIVE') {
-      return res.status(400).json({ error: 'Campaign is not active' });
+    if (campaign.status !== "ACTIVE") {
+      return res.status(400).json({ error: "Campaign is not active" });
     }
 
     // Check if athlete already applied or is participating
     if (campaign.participants.length > 0) {
-      return res.status(400).json({ error: 'You have already applied to or are participating in this campaign' });
+      return res.status(400).json({
+        error:
+          "You have already applied to or are participating in this campaign",
+      });
     }
 
     // Create application
@@ -594,7 +668,7 @@ export async function applyToCampaign(req: AuthRequest, res: Response) {
       data: {
         campaignId: id,
         athleteId: req.user.athleteId,
-        status: 'APPLIED',
+        status: "APPLIED",
         appliedAt: new Date(),
       },
       include: {
@@ -616,17 +690,17 @@ export async function applyToCampaign(req: AuthRequest, res: Response) {
     // Create notification for admin
     try {
       const adminUsers = await prisma.user.findMany({
-        where: { role: 'ADMIN' },
+        where: { role: "ADMIN" },
         select: { id: true },
       });
 
       if (adminUsers.length > 0) {
         await Promise.all(
-          adminUsers.map(admin =>
+          adminUsers.map((admin) =>
             prisma.notification.create({
               data: {
                 userId: admin.id,
-                type: 'CAMPAIGN_ASSIGNED',
+                type: "CAMPAIGN_ASSIGNED",
                 title: `New Campaign Application: ${campaign.title}`,
                 message: `${participant.athlete.name} has applied to the campaign "${campaign.title}" from ${campaign.organization.name}.`,
                 linkUrl: `/admin`,
@@ -637,13 +711,13 @@ export async function applyToCampaign(req: AuthRequest, res: Response) {
         );
       }
     } catch (error) {
-      console.error('Failed to create notification for application:', error);
+      console.error("Failed to create notification for application:", error);
       // Don't fail the request if notification creation fails
     }
 
     res.json(participant);
   } catch (error) {
-    console.error('Apply to campaign error:', error);
-    res.status(500).json({ error: 'Failed to apply to campaign' });
+    console.error("Apply to campaign error:", error);
+    res.status(500).json({ error: "Failed to apply to campaign" });
   }
 }

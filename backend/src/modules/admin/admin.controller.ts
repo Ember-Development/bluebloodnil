@@ -1,15 +1,54 @@
-import { Response } from 'express';
-import { prisma } from '../../config/prisma';
-import { AuthRequest } from '../../middleware/auth.middleware';
-import { createFeedPost, createCampaignRecapPost, createAthleteCampaignPost } from '../../services/feed.service';
-import { createNotification, createNotificationsForUsers } from '../../services/notification.service';
+import { Response } from "express";
+import { prisma } from "../../config/prisma";
+import { AuthRequest } from "../../middleware/auth.middleware";
+import {
+  createFeedPost,
+  createCampaignRecapPost,
+  createAthleteCampaignPost,
+} from "../../services/feed.service";
+import {
+  createNotification,
+  createNotificationsForUsers,
+} from "../../services/notification.service";
+
+// ===== Admin Management =====
+
+export async function getAllAdmins(req: AuthRequest, res: Response) {
+  try {
+    if (req.user?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    const admins = await prisma.user.findMany({
+      where: {
+        role: "ADMIN",
+      },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        externalId: true,
+        firstName: true,
+        lastName: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    res.json(admins);
+  } catch (error) {
+    console.error("Get admins error:", error);
+    res.status(500).json({ error: "Failed to fetch admins" });
+  }
+}
 
 // ===== Organization (Brand) Management =====
 
 export async function getAllOrganizations(req: AuthRequest, res: Response) {
   try {
-    if (req.user?.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Admin access required' });
+    if (req.user?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Admin access required" });
     }
 
     const organizations = await prisma.organization.findMany({
@@ -18,33 +57,36 @@ export async function getAllOrganizations(req: AuthRequest, res: Response) {
           select: { campaigns: true },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
-    res.json(organizations.map(org => ({
-      ...org,
-      campaignsCount: org._count.campaigns,
-    })));
+    res.json(
+      organizations.map((org) => ({
+        ...org,
+        campaignsCount: org._count.campaigns,
+      }))
+    );
   } catch (error) {
-    console.error('Get organizations error:', error);
-    res.status(500).json({ error: 'Failed to fetch organizations' });
+    console.error("Get organizations error:", error);
+    res.status(500).json({ error: "Failed to fetch organizations" });
   }
 }
 
 export async function createOrganization(req: AuthRequest, res: Response) {
   try {
-    if (req.user?.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Admin access required' });
+    if (req.user?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Admin access required" });
     }
 
-    const { name, logoUrl, tier } = req.body as {
+    const { name, logoUrl, tier, category } = req.body as {
       name?: string;
       logoUrl?: string;
       tier?: string;
+      category?: string;
     };
 
     if (!name) {
-      return res.status(400).json({ error: 'Name is required' });
+      return res.status(400).json({ error: "Name is required" });
     }
 
     const organization = await prisma.organization.create({
@@ -52,24 +94,25 @@ export async function createOrganization(req: AuthRequest, res: Response) {
         name,
         logoUrl: logoUrl || null,
         tier: tier || null,
+        category: category || null,
       },
     });
 
     // Create feed post for new brand
     try {
       await createFeedPost({
-        type: 'ORG_ANNOUNCEMENT',
+        type: "ORG_ANNOUNCEMENT",
         headline: `New brand partner: ${name}`,
-        body: `${name} has joined the BlueBlood NIL platform${tier ? ` as a ${tier} tier partner` : ''}. We're excited to work together on NIL opportunities for our athletes.`,
-        tags: ['Brand', 'Partnership', tier || 'New Partner'].filter(Boolean),
-        authorName: 'BlueBloods NIL Desk',
-        authorRole: 'Org NIL & Partnerships',
-        authorAvatarUrl: 'https://placehold.co/64x64',
-        authorOrg: 'BlueBloods Select',
+        body: `${name} has joined the BlueBlood NIL platform${tier ? ` as a ${tier} tier partner` : ""}. We're excited to work together on NIL opportunities for our athletes.`,
+        tags: ["Brand", "Partnership", tier || "New Partner"].filter(Boolean),
+        authorName: "BlueBloods NIL Desk",
+        authorRole: "Org NIL & Partnerships",
+        authorAvatarUrl: "https://placehold.co/64x64",
+        authorOrg: "BlueBloods Select",
         organizationId: organization.id,
       });
     } catch (error) {
-      console.error('Failed to create feed post for organization:', error);
+      console.error("Failed to create feed post for organization:", error);
       // Don't fail the request if feed post creation fails
     }
 
@@ -77,56 +120,58 @@ export async function createOrganization(req: AuthRequest, res: Response) {
     try {
       await createNotification({
         userId: null, // Broadcast to all users
-        type: 'BRAND_ADDED',
+        type: "BRAND_ADDED",
         title: `New Brand Partner: ${name}`,
-        message: `${name} has joined the platform${tier ? ` as a ${tier} tier partner` : ''}. Check out new campaign opportunities!`,
+        message: `${name} has joined the platform${tier ? ` as a ${tier} tier partner` : ""}. Check out new campaign opportunities!`,
         linkUrl: `/athletes`,
       });
     } catch (error) {
-      console.error('Failed to create notification for organization:', error);
+      console.error("Failed to create notification for organization:", error);
       // Don't fail the request if notification creation fails
     }
 
     res.json(organization);
   } catch (error) {
-    console.error('Create organization error:', error);
-    res.status(500).json({ error: 'Failed to create organization' });
+    console.error("Create organization error:", error);
+    res.status(500).json({ error: "Failed to create organization" });
   }
 }
 
 export async function updateOrganization(req: AuthRequest, res: Response) {
   try {
-    if (req.user?.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Admin access required' });
+    if (req.user?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Admin access required" });
     }
 
     const { id } = req.params;
-    const { name, logoUrl, tier } = req.body as {
+    const { name, logoUrl, tier, category } = req.body as {
       name?: string;
       logoUrl?: string;
       tier?: string;
+      category?: string;
     };
 
     const organization = await prisma.organization.update({
       where: { id },
       data: {
-        ...(name && { name }),
+        ...(name !== undefined && { name }),
         ...(logoUrl !== undefined && { logoUrl: logoUrl || null }),
         ...(tier !== undefined && { tier: tier || null }),
+        ...(category !== undefined && { category: category || null }),
       },
     });
 
     res.json(organization);
   } catch (error) {
-    console.error('Update organization error:', error);
-    res.status(500).json({ error: 'Failed to update organization' });
+    console.error("Update organization error:", error);
+    res.status(500).json({ error: "Failed to update organization" });
   }
 }
 
 export async function deleteOrganization(req: AuthRequest, res: Response) {
   try {
-    if (req.user?.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Admin access required' });
+    if (req.user?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Admin access required" });
     }
 
     const { id } = req.params;
@@ -137,8 +182,8 @@ export async function deleteOrganization(req: AuthRequest, res: Response) {
 
     res.json({ success: true });
   } catch (error) {
-    console.error('Delete organization error:', error);
-    res.status(500).json({ error: 'Failed to delete organization' });
+    console.error("Delete organization error:", error);
+    res.status(500).json({ error: "Failed to delete organization" });
   }
 }
 
@@ -146,8 +191,8 @@ export async function deleteOrganization(req: AuthRequest, res: Response) {
 
 export async function getAllCampaigns(req: AuthRequest, res: Response) {
   try {
-    if (req.user?.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Admin access required' });
+    if (req.user?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Admin access required" });
     }
 
     const campaigns = await prisma.campaign.findMany({
@@ -164,25 +209,25 @@ export async function getAllCampaigns(req: AuthRequest, res: Response) {
             },
           },
           orderBy: [
-            { status: 'asc' }, // APPLIED first, then ACCEPTED, etc.
-            { appliedAt: 'desc' }, // Most recent applications first
+            { status: "asc" }, // APPLIED first, then ACCEPTED, etc.
+            { appliedAt: "desc" }, // Most recent applications first
           ],
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     res.json(campaigns);
   } catch (error) {
-    console.error('Get campaigns error:', error);
-    res.status(500).json({ error: 'Failed to fetch campaigns' });
+    console.error("Get campaigns error:", error);
+    res.status(500).json({ error: "Failed to fetch campaigns" });
   }
 }
 
 export async function createCampaign(req: AuthRequest, res: Response) {
   try {
-    if (req.user?.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Admin access required' });
+    if (req.user?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Admin access required" });
     }
 
     const {
@@ -194,6 +239,8 @@ export async function createCampaign(req: AuthRequest, res: Response) {
       type,
       isOpen,
       address,
+      startDate,
+      endDate,
       totalEarnings,
       earningsSplitMethod,
       athleteEarnings,
@@ -202,28 +249,63 @@ export async function createCampaign(req: AuthRequest, res: Response) {
       description?: string;
       organizationId?: string;
       athleteIds?: string[];
-      status?: 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'ARCHIVED';
-      type?: 'SOCIAL_MEDIA_POST' | 'COMMERCIAL_VIDEO' | 'IN_PERSON_APPEARANCE' | 'PRODUCT_ENDORSEMENT' | 'AUTOGRAPH_SIGNING' | 'SPEAKING_ENGAGEMENT' | 'PHOTO_SHOOT' | 'PARTNERSHIP';
+      status?: "DRAFT" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
+      type?:
+        | "SOCIAL_MEDIA_POST"
+        | "COMMERCIAL_VIDEO"
+        | "IN_PERSON_APPEARANCE"
+        | "PRODUCT_ENDORSEMENT"
+        | "AUTOGRAPH_SIGNING"
+        | "SPEAKING_ENGAGEMENT"
+        | "PHOTO_SHOOT"
+        | "PARTNERSHIP";
       isOpen?: boolean;
       address?: string;
+      startDate?: string;
+      endDate?: string;
       totalEarnings?: number;
-      earningsSplitMethod?: 'EQUAL' | 'CUSTOM';
+      earningsSplitMethod?: "EQUAL" | "CUSTOM";
       athleteEarnings?: Record<string, number>;
     };
 
     if (!title || !organizationId || !type) {
-      return res.status(400).json({ error: 'Title, organizationId, and type are required' });
+      return res
+        .status(400)
+        .json({ error: "Title, organizationId, and type are required" });
     }
 
     // Require address for in-person campaigns
-    if (type === 'IN_PERSON_APPEARANCE' && !address) {
-      return res.status(400).json({ error: 'Address is required for in-person campaigns' });
+    if (type === "IN_PERSON_APPEARANCE" && !address) {
+      return res
+        .status(400)
+        .json({ error: "Address is required for in-person campaigns" });
     }
 
     // Validate earnings split
-    if (totalEarnings && earningsSplitMethod === 'CUSTOM' && athleteIds && athleteIds.length > 0) {
-      if (!athleteEarnings || Object.keys(athleteEarnings).length !== athleteIds.length) {
-        return res.status(400).json({ error: 'athleteEarnings mapping required for CUSTOM split method' });
+    if (
+      totalEarnings &&
+      earningsSplitMethod === "CUSTOM" &&
+      athleteIds &&
+      athleteIds.length > 0
+    ) {
+      if (
+        !athleteEarnings ||
+        Object.keys(athleteEarnings).length !== athleteIds.length
+      ) {
+        return res.status(400).json({
+          error: "athleteEarnings mapping required for CUSTOM split method",
+        });
+      }
+    }
+
+    // Validate dates if provided
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (end < start) {
+        return res.status(400).json({
+          error: "End date must be after start date",
+        });
       }
     }
 
@@ -233,28 +315,40 @@ export async function createCampaign(req: AuthRequest, res: Response) {
         description: description || null,
         organizationId,
         type,
-        status: status || 'DRAFT',
+        status: status || "DRAFT",
         isOpen: isOpen || false,
         address: address || null,
+        startDate: startDate ? new Date(startDate) : null,
+        endDate: endDate ? new Date(endDate) : null,
         totalEarnings: totalEarnings || null,
-        earningsSplitMethod: earningsSplitMethod || 'EQUAL',
-        participants: athleteIds && athleteIds.length > 0 ? {
-          create: athleteIds.map(athleteId => {
-            let earnings = null;
-            if (totalEarnings) {
-              if (earningsSplitMethod === 'CUSTOM' && athleteEarnings) {
-                earnings = athleteEarnings[athleteId] || null;
-              } else if (earningsSplitMethod === 'EQUAL') {
-                earnings = totalEarnings / athleteIds.length;
+        earningsSplitMethod: earningsSplitMethod || "EQUAL",
+        participants:
+          athleteIds && athleteIds.length > 0
+            ? {
+                create: athleteIds.map((athleteId) => {
+                  let earnings = null;
+                  if (totalEarnings) {
+                    // Calculate 60% available for athletes
+                    const athletePool = totalEarnings * 0.6;
+
+                    if (earningsSplitMethod === "CUSTOM" && athleteEarnings) {
+                      // athleteEarnings now contains percentages (0-100)
+                      // Convert percentage to dollar amount from the 60% pool
+                      const percentage = athleteEarnings[athleteId] || 0;
+                      earnings = (athletePool * percentage) / 100;
+                    } else if (earningsSplitMethod === "EQUAL") {
+                      // Equal split of the 60% pool
+                      earnings = athletePool / athleteIds.length;
+                    }
+                  }
+                  return {
+                    athleteId,
+                    status: "INVITED",
+                    earnings,
+                  };
+                }),
               }
-            }
-            return {
-              athleteId,
-              status: 'INVITED',
-              earnings,
-            };
-          }),
-        } : undefined,
+            : undefined,
       },
       include: {
         organization: true,
@@ -274,36 +368,45 @@ export async function createCampaign(req: AuthRequest, res: Response) {
 
     // Create feed post for new campaign
     try {
-      const statusMap: Record<string, 'planning' | 'live' | 'wrapped'> = {
-        'DRAFT': 'planning',
-        'ACTIVE': 'live',
-        'COMPLETED': 'wrapped',
-        'ARCHIVED': 'wrapped',
+      const statusMap: Record<string, "planning" | "live" | "wrapped"> = {
+        DRAFT: "planning",
+        ACTIVE: "live",
+        COMPLETED: "wrapped",
+        ARCHIVED: "wrapped",
       };
 
       await createFeedPost({
-        type: 'CAMPAIGN',
-        headline: campaign.participants.length > 0
-          ? `${campaign.organization.name} campaign: ${title} — ${campaign.participants.length} athlete${campaign.participants.length !== 1 ? 's' : ''} invited`
-          : campaign.isOpen
-            ? `New open campaign: ${title} from ${campaign.organization.name}`
-            : `New campaign: ${title} from ${campaign.organization.name}`,
-        body: description || `A new NIL campaign opportunity from ${campaign.organization.name}.${campaign.participants.length > 0 ? ` ${campaign.participants.length} athlete${campaign.participants.length !== 1 ? 's have' : ' has'} been invited to participate.` : campaign.isOpen ? ' Athletes can apply to participate.' : ''}`,
-        tags: ['Campaign', campaign.organization.name, status || 'Draft'].filter(Boolean),
+        type: "CAMPAIGN",
+        headline:
+          campaign.participants.length > 0
+            ? `${campaign.organization.name} campaign: ${title} — ${campaign.participants.length} athlete${campaign.participants.length !== 1 ? "s" : ""} invited`
+            : campaign.isOpen
+              ? `New open campaign: ${title} from ${campaign.organization.name}`
+              : `New campaign: ${title} from ${campaign.organization.name}`,
+        body:
+          description ||
+          `A new NIL campaign opportunity from ${campaign.organization.name}.${campaign.participants.length > 0 ? ` ${campaign.participants.length} athlete${campaign.participants.length !== 1 ? "s have" : " has"} been invited to participate.` : campaign.isOpen ? " Athletes can apply to participate." : ""}`,
+        tags: [
+          "Campaign",
+          campaign.organization.name,
+          status || "Draft",
+        ].filter(Boolean),
         authorName: campaign.organization.name,
-        authorRole: 'Partner Brand',
-        authorAvatarUrl: campaign.organization.logoUrl || 'https://placehold.co/64x64',
+        authorRole: "Partner Brand",
+        authorAvatarUrl:
+          campaign.organization.logoUrl || "https://placehold.co/64x64",
         authorOrg: campaign.organization.name,
         brand: campaign.organization.name,
-        brandLogoUrl: campaign.organization.logoUrl || 'https://placehold.co/56x56',
-        objective: description || 'New campaign opportunity',
-        campaignStatus: statusMap[status || 'DRAFT'] || 'planning',
+        brandLogoUrl:
+          campaign.organization.logoUrl || "https://placehold.co/56x56",
+        objective: description || "New campaign opportunity",
+        campaignStatus: statusMap[status || "DRAFT"] || "planning",
         campaignId: campaign.id,
         organizationId: campaign.organizationId,
         isOpen: campaign.isOpen,
       });
     } catch (error) {
-      console.error('Failed to create feed post for campaign:', error);
+      console.error("Failed to create feed post for campaign:", error);
       // Don't fail the request if feed post creation fails
     }
 
@@ -315,7 +418,7 @@ export async function createCampaign(req: AuthRequest, res: Response) {
           where: {
             athlete: {
               id: {
-                in: campaign.participants.map(p => p.athlete.id),
+                in: campaign.participants.map((p) => p.athlete.id),
               },
             },
           },
@@ -324,9 +427,9 @@ export async function createCampaign(req: AuthRequest, res: Response) {
 
         if (athleteUserIds.length > 0) {
           await createNotificationsForUsers(
-            athleteUserIds.map(u => u.id),
+            athleteUserIds.map((u) => u.id),
             {
-              type: 'CAMPAIGN_ASSIGNED',
+              type: "CAMPAIGN_ASSIGNED",
               title: `New Campaign: ${title}`,
               message: `You've been invited to participate in a campaign with ${campaign.organization.name}. Check your campaigns for details.`,
               linkUrl: `/athletes/${campaign.participants[0]?.athlete.id}`,
@@ -337,14 +440,14 @@ export async function createCampaign(req: AuthRequest, res: Response) {
 
         // Create congratulatory feed posts for each assigned athlete
         const campaignTypeLabels: Record<string, string> = {
-          SOCIAL_MEDIA_POST: 'Social Media Post',
-          COMMERCIAL_VIDEO: 'Commercial Video',
-          IN_PERSON_APPEARANCE: 'In-Person Appearance',
-          PRODUCT_ENDORSEMENT: 'Product Endorsement',
-          AUTOGRAPH_SIGNING: 'Autograph Signing',
-          SPEAKING_ENGAGEMENT: 'Speaking Engagement',
-          PHOTO_SHOOT: 'Photo Shoot',
-          PARTNERSHIP: 'Partnership',
+          SOCIAL_MEDIA_POST: "Social Media Post",
+          COMMERCIAL_VIDEO: "Commercial Video",
+          IN_PERSON_APPEARANCE: "In-Person Appearance",
+          PRODUCT_ENDORSEMENT: "Product Endorsement",
+          AUTOGRAPH_SIGNING: "Autograph Signing",
+          SPEAKING_ENGAGEMENT: "Speaking Engagement",
+          PHOTO_SHOOT: "Photo Shoot",
+          PARTNERSHIP: "Partnership",
         };
 
         await Promise.all(
@@ -360,10 +463,12 @@ export async function createCampaign(req: AuthRequest, res: Response) {
                 organizationId: campaign.organizationId,
                 organizationLogoUrl: campaign.organization.logoUrl || undefined,
                 campaignType: campaignTypeLabels[type] || type,
-                earnings: participant.earnings || undefined,
               });
             } catch (error) {
-              console.error(`Failed to create feed post for athlete ${participant.athlete.id}:`, error);
+              console.error(
+                `Failed to create feed post for athlete ${participant.athlete.id}:`,
+                error
+              );
               // Don't fail the request if individual post creation fails
             }
           })
@@ -373,28 +478,28 @@ export async function createCampaign(req: AuthRequest, res: Response) {
       // Create broadcast notification for all users about new campaign
       await createNotification({
         userId: null, // Broadcast to all users
-        type: 'CAMPAIGN_CREATED',
+        type: "CAMPAIGN_CREATED",
         title: `New Campaign: ${title}`,
-        message: `${campaign.organization.name} has launched a new NIL campaign${campaign.participants.length > 0 ? ` with ${campaign.participants.length} athlete${campaign.participants.length !== 1 ? 's' : ''}` : ''}.`,
+        message: `${campaign.organization.name} has launched a new NIL campaign${campaign.participants.length > 0 ? ` with ${campaign.participants.length} athlete${campaign.participants.length !== 1 ? "s" : ""}` : ""}.`,
         linkUrl: `/feed`,
         campaignId: campaign.id,
       });
     } catch (error) {
-      console.error('Failed to create notifications for campaign:', error);
+      console.error("Failed to create notifications for campaign:", error);
       // Don't fail the request if notification creation fails
     }
 
     res.json(campaign);
   } catch (error) {
-    console.error('Create campaign error:', error);
-    res.status(500).json({ error: 'Failed to create campaign' });
+    console.error("Create campaign error:", error);
+    res.status(500).json({ error: "Failed to create campaign" });
   }
 }
 
 export async function updateCampaign(req: AuthRequest, res: Response) {
   try {
-    if (req.user?.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Admin access required' });
+    if (req.user?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Admin access required" });
     }
 
     const { id } = req.params;
@@ -405,18 +510,30 @@ export async function updateCampaign(req: AuthRequest, res: Response) {
       type,
       isOpen,
       address,
+      startDate,
+      endDate,
       totalEarnings,
       earningsSplitMethod,
       athleteEarnings,
     } = req.body as {
       title?: string;
       description?: string;
-      status?: 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'ARCHIVED';
-      type?: 'SOCIAL_MEDIA_POST' | 'COMMERCIAL_VIDEO' | 'IN_PERSON_APPEARANCE' | 'PRODUCT_ENDORSEMENT' | 'AUTOGRAPH_SIGNING' | 'SPEAKING_ENGAGEMENT' | 'PHOTO_SHOOT' | 'PARTNERSHIP';
+      status?: "DRAFT" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
+      type?:
+        | "SOCIAL_MEDIA_POST"
+        | "COMMERCIAL_VIDEO"
+        | "IN_PERSON_APPEARANCE"
+        | "PRODUCT_ENDORSEMENT"
+        | "AUTOGRAPH_SIGNING"
+        | "SPEAKING_ENGAGEMENT"
+        | "PHOTO_SHOOT"
+        | "PARTNERSHIP";
       isOpen?: boolean;
       address?: string;
+      startDate?: string;
+      endDate?: string;
       totalEarnings?: number;
-      earningsSplitMethod?: 'EQUAL' | 'CUSTOM';
+      earningsSplitMethod?: "EQUAL" | "CUSTOM";
       athleteEarnings?: Record<string, number>;
     };
 
@@ -427,12 +544,29 @@ export async function updateCampaign(req: AuthRequest, res: Response) {
     });
 
     if (!existingCampaign) {
-      return res.status(404).json({ error: 'Campaign not found' });
+      return res.status(404).json({ error: "Campaign not found" });
     }
 
     const finalType = type || existingCampaign.type;
-    if (finalType === 'IN_PERSON_APPEARANCE' && address === undefined && !existingCampaign.address) {
-      return res.status(400).json({ error: 'Address is required for in-person campaigns' });
+    if (
+      finalType === "IN_PERSON_APPEARANCE" &&
+      address === undefined &&
+      !existingCampaign.address
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Address is required for in-person campaigns" });
+    }
+
+    // Validate dates if provided
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (end < start) {
+        return res.status(400).json({
+          error: "End date must be after start date",
+        });
+      }
     }
 
     const campaign = await prisma.campaign.update({
@@ -444,7 +578,9 @@ export async function updateCampaign(req: AuthRequest, res: Response) {
         ...(type && { type }),
         ...(isOpen !== undefined && { isOpen }),
         ...(address !== undefined && { address: address || null }),
-        ...(totalEarnings !== undefined && { totalEarnings: totalEarnings || null }),
+        ...(totalEarnings !== undefined && {
+          totalEarnings: totalEarnings || null,
+        }),
         ...(earningsSplitMethod && { earningsSplitMethod }),
       },
       include: {
@@ -464,17 +600,28 @@ export async function updateCampaign(req: AuthRequest, res: Response) {
     });
 
     // Update participant earnings if earningsSplitMethod or totalEarnings changed
-    if ((earningsSplitMethod || totalEarnings !== undefined) && campaign.participants.length > 0) {
-      const finalTotalEarnings = totalEarnings !== undefined ? totalEarnings : campaign.totalEarnings;
-      const finalSplitMethod = earningsSplitMethod || campaign.earningsSplitMethod;
+    if (
+      (earningsSplitMethod || totalEarnings !== undefined) &&
+      campaign.participants.length > 0
+    ) {
+      const finalTotalEarnings =
+        totalEarnings !== undefined ? totalEarnings : campaign.totalEarnings;
+      const finalSplitMethod =
+        earningsSplitMethod || campaign.earningsSplitMethod;
 
       if (finalTotalEarnings) {
-        const updatePromises = campaign.participants.map(participant => {
+        // Calculate 60% available for athletes
+        const athletePool = finalTotalEarnings * 0.6;
+
+        const updatePromises = campaign.participants.map((participant) => {
           let earnings = null;
-          if (finalSplitMethod === 'CUSTOM' && athleteEarnings) {
-            earnings = athleteEarnings[participant.athleteId] || null;
-          } else if (finalSplitMethod === 'EQUAL') {
-            earnings = finalTotalEarnings / campaign.participants.length;
+          if (finalSplitMethod === "CUSTOM" && athleteEarnings) {
+            // athleteEarnings contains percentages, convert to dollar amount
+            const percentage = athleteEarnings[participant.athleteId] || 0;
+            earnings = (athletePool * percentage) / 100;
+          } else if (finalSplitMethod === "EQUAL") {
+            // Equal split of the 60% pool
+            earnings = athletePool / campaign.participants.length;
           }
 
           return prisma.campaignParticipant.update({
@@ -508,15 +655,18 @@ export async function updateCampaign(req: AuthRequest, res: Response) {
 
     res.json(updatedCampaign);
   } catch (error) {
-    console.error('Update campaign error:', error);
-    res.status(500).json({ error: 'Failed to update campaign' });
+    console.error("Update campaign error:", error);
+    res.status(500).json({ error: "Failed to update campaign" });
   }
 }
 
-export async function assignAthletesToCampaign(req: AuthRequest, res: Response) {
+export async function assignAthletesToCampaign(
+  req: AuthRequest,
+  res: Response
+) {
   try {
-    if (req.user?.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Admin access required' });
+    if (req.user?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Admin access required" });
     }
 
     const { id } = req.params;
@@ -526,7 +676,7 @@ export async function assignAthletesToCampaign(req: AuthRequest, res: Response) 
     };
 
     if (!Array.isArray(athleteIds)) {
-      return res.status(400).json({ error: 'athleteIds must be an array' });
+      return res.status(400).json({ error: "athleteIds must be an array" });
     }
 
     // Get campaign to check earnings settings
@@ -535,7 +685,7 @@ export async function assignAthletesToCampaign(req: AuthRequest, res: Response) 
     });
 
     if (!campaignData) {
-      return res.status(404).json({ error: 'Campaign not found' });
+      return res.status(404).json({ error: "Campaign not found" });
     }
 
     // Remove existing participants
@@ -545,19 +695,28 @@ export async function assignAthletesToCampaign(req: AuthRequest, res: Response) 
 
     // Create new participants with earnings
     if (athleteIds.length > 0) {
-      const participantsData = athleteIds.map(athleteId => {
+      const participantsData = athleteIds.map((athleteId) => {
         let earnings = null;
         if (campaignData.totalEarnings) {
-          if (campaignData.earningsSplitMethod === 'CUSTOM' && athleteEarnings) {
-            earnings = athleteEarnings[athleteId] || null;
-          } else if (campaignData.earningsSplitMethod === 'EQUAL') {
-            earnings = campaignData.totalEarnings / athleteIds.length;
+          // Calculate 60% available for athletes
+          const athletePool = campaignData.totalEarnings * 0.6;
+
+          if (
+            campaignData.earningsSplitMethod === "CUSTOM" &&
+            athleteEarnings
+          ) {
+            // athleteEarnings contains percentages, convert to dollar amount
+            const percentage = athleteEarnings[athleteId] || 0;
+            earnings = (athletePool * percentage) / 100;
+          } else if (campaignData.earningsSplitMethod === "EQUAL") {
+            // Equal split of the 60% pool
+            earnings = athletePool / athleteIds.length;
           }
         }
         return {
           campaignId: id,
           athleteId,
-          status: 'INVITED' as const,
+          status: "INVITED" as const,
           earnings,
         };
       });
@@ -586,7 +745,7 @@ export async function assignAthletesToCampaign(req: AuthRequest, res: Response) 
     });
 
     if (!campaign) {
-      return res.status(404).json({ error: 'Campaign not found' });
+      return res.status(404).json({ error: "Campaign not found" });
     }
 
     // Create notifications and congratulatory feed posts for assigned athletes
@@ -605,9 +764,9 @@ export async function assignAthletesToCampaign(req: AuthRequest, res: Response) 
 
         if (athleteUserIds.length > 0) {
           await createNotificationsForUsers(
-            athleteUserIds.map(u => u.id),
+            athleteUserIds.map((u) => u.id),
             {
-              type: 'CAMPAIGN_ASSIGNED',
+              type: "CAMPAIGN_ASSIGNED",
               title: `Campaign Assignment: ${campaign.title}`,
               message: `You've been assigned to a campaign with ${campaign.organization.name}. Check your campaigns for details.`,
               linkUrl: `/athletes/${athleteIds[0]}`,
@@ -618,14 +777,14 @@ export async function assignAthletesToCampaign(req: AuthRequest, res: Response) 
 
         // Create congratulatory feed posts for each assigned athlete
         const campaignTypeLabels: Record<string, string> = {
-          SOCIAL_MEDIA_POST: 'Social Media Post',
-          COMMERCIAL_VIDEO: 'Commercial Video',
-          IN_PERSON_APPEARANCE: 'In-Person Appearance',
-          PRODUCT_ENDORSEMENT: 'Product Endorsement',
-          AUTOGRAPH_SIGNING: 'Autograph Signing',
-          SPEAKING_ENGAGEMENT: 'Speaking Engagement',
-          PHOTO_SHOOT: 'Photo Shoot',
-          PARTNERSHIP: 'Partnership',
+          SOCIAL_MEDIA_POST: "Social Media Post",
+          COMMERCIAL_VIDEO: "Commercial Video",
+          IN_PERSON_APPEARANCE: "In-Person Appearance",
+          PRODUCT_ENDORSEMENT: "Product Endorsement",
+          AUTOGRAPH_SIGNING: "Autograph Signing",
+          SPEAKING_ENGAGEMENT: "Speaking Engagement",
+          PHOTO_SHOOT: "Photo Shoot",
+          PARTNERSHIP: "Partnership",
         };
 
         await Promise.all(
@@ -640,35 +799,42 @@ export async function assignAthletesToCampaign(req: AuthRequest, res: Response) 
                 organizationName: campaign.organization.name,
                 organizationId: campaign.organizationId,
                 organizationLogoUrl: campaign.organization.logoUrl || undefined,
-                campaignType: campaignTypeLabels[campaign.type] || campaign.type,
-                earnings: participant.earnings || undefined,
+                campaignType:
+                  campaignTypeLabels[campaign.type] || campaign.type,
               });
             } catch (error) {
-              console.error(`Failed to create feed post for athlete ${participant.athlete.id}:`, error);
+              console.error(
+                `Failed to create feed post for athlete ${participant.athlete.id}:`,
+                error
+              );
               // Don't fail the request if individual post creation fails
             }
           })
         );
       } catch (error) {
-        console.error('Failed to create notifications/feed posts for assigned athletes:', error);
+        console.error(
+          "Failed to create notifications/feed posts for assigned athletes:",
+          error
+        );
         // Don't fail the request if notification/feed post creation fails
       }
     }
 
     res.json(campaign);
   } catch (error) {
-    console.error('Assign athletes to campaign error:', error);
-    res.status(500).json({ error: 'Failed to assign athletes to campaign' });
+    console.error("Assign athletes to campaign error:", error);
+    res.status(500).json({ error: "Failed to assign athletes to campaign" });
   }
 }
 
 export async function closeCampaign(req: AuthRequest, res: Response) {
   try {
-    if (req.user?.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Admin access required' });
+    if (req.user?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Admin access required" });
     }
 
     const { id } = req.params;
+    const { results } = req.body as { results?: any };
 
     // Get campaign with all related data
     const campaign = await prisma.campaign.findUnique({
@@ -689,7 +855,7 @@ export async function closeCampaign(req: AuthRequest, res: Response) {
     });
 
     if (!campaign) {
-      return res.status(404).json({ error: 'Campaign not found' });
+      return res.status(404).json({ error: "Campaign not found" });
     }
 
     // Get all todos for this campaign with verification data
@@ -709,22 +875,55 @@ export async function closeCampaign(req: AuthRequest, res: Response) {
     });
 
     // Build verification content
-    const verificationContent = todos.map(todo => ({
+    const verificationContent = todos.map((todo) => ({
       athleteName: todo.athlete.name,
       verificationUrl: todo.verificationUrl || undefined,
       verificationNotes: todo.verificationNotes || undefined,
     }));
 
-    // Build participants with earnings
-    const participants = campaign.participants.map(p => ({
-      athleteName: p.athlete.name,
-      earnings: p.earnings || undefined,
-    }));
+    // Format results for recap post
+    let resultsText = "";
+    if (results) {
+      resultsText = "\n\nCampaign Results:\n";
+      if (results.links && results.links.length > 0) {
+        resultsText += "Content Links:\n";
+        results.links.forEach((link: string, index: number) => {
+          if (link.trim()) {
+            resultsText += `${index + 1}. ${link}\n`;
+          }
+        });
+      }
+      if (results.metrics) {
+        const metricEntries = Object.entries(results.metrics).filter(
+          ([_, value]) => value && value.toString().trim()
+        );
+        if (metricEntries.length > 0) {
+          resultsText += "\nMetrics:\n";
+          metricEntries.forEach(([key, value]) => {
+            resultsText += `• ${key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, " ")}: ${value}\n`;
+          });
+        }
+      }
+      if (results.mediaUrls && results.mediaUrls.length > 0) {
+        resultsText += "\nMedia:\n";
+        results.mediaUrls.forEach((url: string, index: number) => {
+          if (url.trim()) {
+            resultsText += `${index + 1}. ${url}\n`;
+          }
+        });
+      }
+      if (results.notes && results.notes.trim()) {
+        resultsText += `\nNotes: ${results.notes}\n`;
+      }
+    }
 
-    // Update campaign status to COMPLETED
+    // Update campaign status to COMPLETED and store results
     const updatedCampaign = await prisma.campaign.update({
       where: { id },
-      data: { status: 'COMPLETED' },
+      data: {
+        status: "COMPLETED",
+        ...(results && { results: results as any }),
+      },
       include: {
         organization: true,
         participants: {
@@ -751,8 +950,8 @@ export async function closeCampaign(req: AuthRequest, res: Response) {
         organizationId: campaign.organizationId,
         organizationLogoUrl: campaign.organization.logoUrl || undefined,
         verificationContent,
-        totalEarnings: campaign.totalEarnings || undefined,
-        participants,
+        // Remove totalEarnings and participants parameters
+        resultsText,
       });
 
       // Create individual recap posts for each athlete so they appear in their Content tab
@@ -760,27 +959,35 @@ export async function closeCampaign(req: AuthRequest, res: Response) {
         campaign.participants.map(async (participant) => {
           try {
             const athleteVerification = verificationContent.find(
-              v => v.athleteName === participant.athlete.name
+              (v) => v.athleteName === participant.athlete.name
             );
-            
-            const earningsText = participant.earnings 
-              ? ` earning $${participant.earnings.toLocaleString()}` 
-              : '';
-            
+
+            // Remove earningsText calculation
+            // const earningsText = participant.earnings
+            //   ? ` earning $${participant.earnings.toLocaleString()}`
+            //   : "";
+
             await prisma.feedPost.create({
               data: {
-                type: 'CAMPAIGN',
+                type: "CAMPAIGN",
                 headline: `✅ Campaign Complete: ${campaign.title}`,
-                body: `Congratulations to ${participant.athlete.name} on completing the "${campaign.title}" campaign with ${campaign.organization.name}!${earningsText ? earningsText : ''}${athleteVerification?.verificationUrl ? `\n\nVerification: ${athleteVerification.verificationUrl}` : ''}${athleteVerification?.verificationNotes ? `\n\nNotes: ${athleteVerification.verificationNotes}` : ''}`,
-                tags: ['Campaign', 'Completed', campaign.organization.name, participant.athlete.name],
+                body: `Congratulations to ${participant.athlete.name} on completing the "${campaign.title}" campaign with ${campaign.organization.name}!${athleteVerification?.verificationUrl ? `\n\nVerification: ${athleteVerification.verificationUrl}` : ""}${athleteVerification?.verificationNotes ? `\n\nNotes: ${athleteVerification.verificationNotes}` : ""}${resultsText ? resultsText : ""}`,
+                tags: [
+                  "Campaign",
+                  "Completed",
+                  campaign.organization.name,
+                  participant.athlete.name,
+                ],
                 authorName: campaign.organization.name,
-                authorRole: 'Partner Brand',
-                authorAvatarUrl: campaign.organization.logoUrl || 'https://placehold.co/64x64',
+                authorRole: "Partner Brand",
+                authorAvatarUrl:
+                  campaign.organization.logoUrl || "https://placehold.co/64x64",
                 authorOrg: campaign.organization.name,
                 brand: campaign.organization.name,
-                brandLogoUrl: campaign.organization.logoUrl || 'https://placehold.co/56x56',
+                brandLogoUrl:
+                  campaign.organization.logoUrl || "https://placehold.co/56x56",
                 objective: `Campaign completion recap for ${participant.athlete.name}`,
-                campaignStatus: 'wrapped',
+                campaignStatus: "wrapped",
                 campaignId: campaign.id,
                 organizationId: campaign.organizationId,
                 athleteId: participant.athlete.id,
@@ -788,27 +995,33 @@ export async function closeCampaign(req: AuthRequest, res: Response) {
               },
             });
           } catch (error) {
-            console.error(`Failed to create recap post for athlete ${participant.athlete.id}:`, error);
+            console.error(
+              `Failed to create recap post for athlete ${participant.athlete.id}:`,
+              error
+            );
             // Don't fail the request if individual post creation fails
           }
         })
       );
     } catch (error) {
-      console.error('Failed to create recap posts:', error);
+      console.error("Failed to create recap posts:", error);
       // Don't fail the request if recap post creation fails
     }
 
     res.json(updatedCampaign);
   } catch (error) {
-    console.error('Close campaign error:', error);
-    res.status(500).json({ error: 'Failed to close campaign' });
+    console.error("Close campaign error:", error);
+    res.status(500).json({ error: "Failed to close campaign" });
   }
 }
 
-export async function acceptCampaignApplication(req: AuthRequest, res: Response) {
+export async function acceptCampaignApplication(
+  req: AuthRequest,
+  res: Response
+) {
   try {
-    if (req.user?.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Admin access required' });
+    if (req.user?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Admin access required" });
     }
 
     const { campaignId, participantId } = req.params;
@@ -833,37 +1046,45 @@ export async function acceptCampaignApplication(req: AuthRequest, res: Response)
     });
 
     if (!participant) {
-      return res.status(404).json({ error: 'Application not found' });
+      return res.status(404).json({ error: "Application not found" });
     }
 
     if (participant.campaignId !== campaignId) {
-      return res.status(400).json({ error: 'Application does not belong to this campaign' });
+      return res
+        .status(400)
+        .json({ error: "Application does not belong to this campaign" });
     }
 
-    if (participant.status !== 'APPLIED') {
-      return res.status(400).json({ error: 'Application is not in APPLIED status' });
+    if (participant.status !== "APPLIED") {
+      return res
+        .status(400)
+        .json({ error: "Application is not in APPLIED status" });
     }
 
-    // Calculate earnings if campaign has totalEarnings
-    let earnings = participant.earnings;
-    if (participant.campaign.totalEarnings && !earnings) {
-      // Count current accepted/invited participants
+    // Calculate earnings based on split method
+    let earnings = null;
+    if (participant.campaign.totalEarnings) {
+      // Calculate 60% available for athletes
+      const athletePool = participant.campaign.totalEarnings * 0.6;
+
       const acceptedCount = await prisma.campaignParticipant.count({
         where: {
           campaignId,
-          status: { in: ['ACCEPTED', 'INVITED'] },
+          status: { in: ["ACCEPTED", "INVITED"] },
         },
       });
-      if (participant.campaign.earningsSplitMethod === 'EQUAL') {
-        earnings = participant.campaign.totalEarnings / (acceptedCount + 1);
+
+      if (participant.campaign.earningsSplitMethod === "EQUAL") {
+        earnings = athletePool / (acceptedCount + 1);
       }
+      // For CUSTOM, earnings should already be set when assigned
     }
 
     // Update participant status to ACCEPTED
     const updatedParticipant = await prisma.campaignParticipant.update({
       where: { id: participantId },
       data: {
-        status: 'ACCEPTED',
+        status: "ACCEPTED",
         earnings,
       },
       include: {
@@ -896,7 +1117,7 @@ export async function acceptCampaignApplication(req: AuthRequest, res: Response)
       if (athleteUser) {
         await createNotification({
           userId: athleteUser.id,
-          type: 'CAMPAIGN_ASSIGNED',
+          type: "CAMPAIGN_ASSIGNED",
           title: `Application Accepted: ${participant.campaign.title}`,
           message: `Congratulations! Your application to the "${participant.campaign.title}" campaign with ${participant.campaign.organization.name} has been accepted. Check your campaigns for details.`,
           linkUrl: `/athletes/${participant.athleteId}`,
@@ -906,14 +1127,14 @@ export async function acceptCampaignApplication(req: AuthRequest, res: Response)
 
       // Create congratulatory feed post
       const campaignTypeLabels: Record<string, string> = {
-        SOCIAL_MEDIA_POST: 'Social Media Post',
-        COMMERCIAL_VIDEO: 'Commercial Video',
-        IN_PERSON_APPEARANCE: 'In-Person Appearance',
-        PRODUCT_ENDORSEMENT: 'Product Endorsement',
-        AUTOGRAPH_SIGNING: 'Autograph Signing',
-        SPEAKING_ENGAGEMENT: 'Speaking Engagement',
-        PHOTO_SHOOT: 'Photo Shoot',
-        PARTNERSHIP: 'Partnership',
+        SOCIAL_MEDIA_POST: "Social Media Post",
+        COMMERCIAL_VIDEO: "Commercial Video",
+        IN_PERSON_APPEARANCE: "In-Person Appearance",
+        PRODUCT_ENDORSEMENT: "Product Endorsement",
+        AUTOGRAPH_SIGNING: "Autograph Signing",
+        SPEAKING_ENGAGEMENT: "Speaking Engagement",
+        PHOTO_SHOOT: "Photo Shoot",
+        PARTNERSHIP: "Partnership",
       };
 
       await createAthleteCampaignPost({
@@ -924,26 +1145,31 @@ export async function acceptCampaignApplication(req: AuthRequest, res: Response)
         campaignTitle: participant.campaign.title,
         organizationName: participant.campaign.organization.name,
         organizationId: participant.campaign.organizationId,
-        organizationLogoUrl: participant.campaign.organization.logoUrl || undefined,
-        campaignType: campaignTypeLabels[participant.campaign.type] || participant.campaign.type,
-        earnings: updatedParticipant.earnings || undefined,
+        organizationLogoUrl:
+          participant.campaign.organization.logoUrl || undefined,
+        campaignType:
+          campaignTypeLabels[participant.campaign.type] ||
+          participant.campaign.type,
       });
     } catch (error) {
-      console.error('Failed to create notification/feed post for accepted application:', error);
+      console.error(
+        "Failed to create notification/feed post for accepted application:",
+        error
+      );
       // Don't fail the request if notification creation fails
     }
 
     res.json(updatedParticipant);
   } catch (error) {
-    console.error('Accept campaign application error:', error);
-    res.status(500).json({ error: 'Failed to accept application' });
+    console.error("Accept campaign application error:", error);
+    res.status(500).json({ error: "Failed to accept application" });
   }
 }
 
 export async function denyCampaignApplication(req: AuthRequest, res: Response) {
   try {
-    if (req.user?.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Admin access required' });
+    if (req.user?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Admin access required" });
     }
 
     const { campaignId, participantId } = req.params;
@@ -967,22 +1193,26 @@ export async function denyCampaignApplication(req: AuthRequest, res: Response) {
     });
 
     if (!participant) {
-      return res.status(404).json({ error: 'Application not found' });
+      return res.status(404).json({ error: "Application not found" });
     }
 
     if (participant.campaignId !== campaignId) {
-      return res.status(400).json({ error: 'Application does not belong to this campaign' });
+      return res
+        .status(400)
+        .json({ error: "Application does not belong to this campaign" });
     }
 
-    if (participant.status !== 'APPLIED') {
-      return res.status(400).json({ error: 'Application is not in APPLIED status' });
+    if (participant.status !== "APPLIED") {
+      return res
+        .status(400)
+        .json({ error: "Application is not in APPLIED status" });
     }
 
     // Update participant status to DECLINED
     const updatedParticipant = await prisma.campaignParticipant.update({
       where: { id: participantId },
       data: {
-        status: 'DECLINED',
+        status: "DECLINED",
       },
     });
 
@@ -1000,7 +1230,7 @@ export async function denyCampaignApplication(req: AuthRequest, res: Response) {
       if (athleteUser) {
         await createNotification({
           userId: athleteUser.id,
-          type: 'CAMPAIGN_ASSIGNED',
+          type: "CAMPAIGN_ASSIGNED",
           title: `Application Update: ${participant.campaign.title}`,
           message: `Thank you for your interest in the "${participant.campaign.title}" campaign with ${participant.campaign.organization.name}. While we're unable to move forward with your application at this time, we appreciate your interest and encourage you to apply for future opportunities.`,
           linkUrl: `/campaigns`,
@@ -1008,21 +1238,24 @@ export async function denyCampaignApplication(req: AuthRequest, res: Response) {
         });
       }
     } catch (error) {
-      console.error('Failed to create notification for denied application:', error);
+      console.error(
+        "Failed to create notification for denied application:",
+        error
+      );
       // Don't fail the request if notification creation fails
     }
 
     res.json(updatedParticipant);
   } catch (error) {
-    console.error('Deny campaign application error:', error);
-    res.status(500).json({ error: 'Failed to deny application' });
+    console.error("Deny campaign application error:", error);
+    res.status(500).json({ error: "Failed to deny application" });
   }
 }
 
 export async function deleteCampaign(req: AuthRequest, res: Response) {
   try {
-    if (req.user?.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Admin access required' });
+    if (req.user?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Admin access required" });
     }
 
     const { id } = req.params;
@@ -1033,8 +1266,8 @@ export async function deleteCampaign(req: AuthRequest, res: Response) {
 
     res.json({ success: true });
   } catch (error) {
-    console.error('Delete campaign error:', error);
-    res.status(500).json({ error: 'Failed to delete campaign' });
+    console.error("Delete campaign error:", error);
+    res.status(500).json({ error: "Failed to delete campaign" });
   }
 }
 
@@ -1042,8 +1275,8 @@ export async function deleteCampaign(req: AuthRequest, res: Response) {
 
 export async function getAllTodos(req: AuthRequest, res: Response) {
   try {
-    if (req.user?.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Admin access required' });
+    if (req.user?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Admin access required" });
     }
 
     const todos = await prisma.todo.findMany({
@@ -1056,40 +1289,55 @@ export async function getAllTodos(req: AuthRequest, res: Response) {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     res.json(todos);
   } catch (error) {
-    console.error('Get todos error:', error);
-    res.status(500).json({ error: 'Failed to fetch todos' });
+    console.error("Get todos error:", error);
+    res.status(500).json({ error: "Failed to fetch todos" });
   }
 }
 
 export async function createTodo(req: AuthRequest, res: Response) {
   try {
-    if (req.user?.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Admin access required' });
+    if (req.user?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Admin access required" });
     }
 
-    const { title, description, athleteId, dueDate, priority, campaignId, assignedBy, verificationType } = req.body as {
+    const {
+      title,
+      description,
+      athleteId,
+      dueDate,
+      priority,
+      campaignId,
+      assignedBy,
+      verificationType,
+    } = req.body as {
       title?: string;
       description?: string;
       athleteId?: string;
       dueDate?: string;
-      priority?: 'low' | 'medium' | 'high';
+      priority?: "low" | "medium" | "high";
       campaignId?: string;
       assignedBy?: string;
-      verificationType?: 'SOCIAL_POST' | 'IN_PERSON_EVENT' | 'COMMERCIAL_VIDEO' | 'OTHER';
+      verificationType?:
+        | "SOCIAL_POST"
+        | "IN_PERSON_EVENT"
+        | "COMMERCIAL_VIDEO"
+        | "OTHER";
     };
 
     if (!title || !description || !athleteId || !dueDate) {
-      return res.status(400).json({ error: 'Title, description, athleteId, and dueDate are required' });
+      return res.status(400).json({
+        error: "Title, description, athleteId, and dueDate are required",
+      });
     }
 
     const dueDateObj = new Date(dueDate);
     if (isNaN(dueDateObj.getTime())) {
-      return res.status(400).json({ error: 'Invalid dueDate format' });
+      return res.status(400).json({ error: "Invalid dueDate format" });
     }
 
     const todo = await prisma.todo.create({
@@ -1098,9 +1346,9 @@ export async function createTodo(req: AuthRequest, res: Response) {
         description,
         athleteId,
         dueDate: dueDateObj,
-        priority: priority || 'medium',
+        priority: priority || "medium",
         campaignId: campaignId || null,
-        assignedBy: assignedBy || 'Admin',
+        assignedBy: assignedBy || "Admin",
         verificationType: verificationType || null,
       },
       include: {
@@ -1116,15 +1364,15 @@ export async function createTodo(req: AuthRequest, res: Response) {
 
     res.json(todo);
   } catch (error) {
-    console.error('Create todo error:', error);
-    res.status(500).json({ error: 'Failed to create todo' });
+    console.error("Create todo error:", error);
+    res.status(500).json({ error: "Failed to create todo" });
   }
 }
 
 export async function updateTodo(req: AuthRequest, res: Response) {
   try {
-    if (req.user?.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Admin access required' });
+    if (req.user?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Admin access required" });
     }
 
     const { id } = req.params;
@@ -1132,8 +1380,8 @@ export async function updateTodo(req: AuthRequest, res: Response) {
       title?: string;
       description?: string;
       dueDate?: string;
-      status?: 'pending' | 'in_progress' | 'completed';
-      priority?: 'low' | 'medium' | 'high';
+      status?: "pending" | "in_progress" | "completed";
+      priority?: "low" | "medium" | "high";
     };
 
     const updateData: any = {};
@@ -1142,7 +1390,7 @@ export async function updateTodo(req: AuthRequest, res: Response) {
     if (dueDate) {
       const dueDateObj = new Date(dueDate);
       if (isNaN(dueDateObj.getTime())) {
-        return res.status(400).json({ error: 'Invalid dueDate format' });
+        return res.status(400).json({ error: "Invalid dueDate format" });
       }
       updateData.dueDate = dueDateObj;
     }
@@ -1165,15 +1413,93 @@ export async function updateTodo(req: AuthRequest, res: Response) {
 
     res.json(todo);
   } catch (error) {
-    console.error('Update todo error:', error);
-    res.status(500).json({ error: 'Failed to update todo' });
+    console.error("Update todo error:", error);
+    res.status(500).json({ error: "Failed to update todo" });
+  }
+}
+
+export async function refreshAllSocialMetrics(req: AuthRequest, res: Response) {
+  try {
+    if (req.user?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    const { socialScraperService } = await import(
+      "../../services/social-scraper.service"
+    );
+
+    // Start scraping in background
+    socialScraperService
+      .scrapeAllProfiles()
+      .then((result) => {
+        console.log(
+          `[Admin] Social metrics refresh completed: ${result.success} successful, ${result.failed} failed`
+        );
+      })
+      .catch((error) => {
+        console.error("[Admin] Social metrics refresh error:", error);
+      });
+
+    res.json({
+      message: "Social metrics refresh started in background",
+    });
+  } catch (error) {
+    console.error("Refresh all social metrics error:", error);
+    res.status(500).json({ error: "Failed to start social metrics refresh" });
+  }
+}
+
+export async function getScrapingStatus(req: AuthRequest, res: Response) {
+  try {
+    if (req.user?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    const profiles = await prisma.athleteSocialProfile.findMany({
+      where: {
+        handle: { not: "" },
+      },
+    });
+
+    const stats = {
+      total: profiles.length,
+      success: profiles.filter((p) => (p as any).scrapingStatus === "success")
+        .length,
+      failed: profiles.filter((p) => (p as any).scrapingStatus === "failed")
+        .length,
+      pending: profiles.filter((p) => (p as any).scrapingStatus === "pending")
+        .length,
+      neverScraped: profiles.filter((p) => !(p as any).scrapingStatus).length,
+      lastScraped: profiles
+        .filter((p) => (p as any).lastScrapedAt)
+        .sort(
+          (a, b) =>
+            ((b as any).lastScrapedAt?.getTime() || 0) -
+            ((a as any).lastScrapedAt?.getTime() || 0)
+        )[0]
+        ? (
+            profiles
+              .filter((p) => (p as any).lastScrapedAt)
+              .sort(
+                (a, b) =>
+                  ((b as any).lastScrapedAt?.getTime() || 0) -
+                  ((a as any).lastScrapedAt?.getTime() || 0)
+              )[0] as any
+          ).lastScrapedAt
+        : null,
+    };
+
+    res.json(stats);
+  } catch (error) {
+    console.error("Get scraping status error:", error);
+    res.status(500).json({ error: "Failed to get scraping status" });
   }
 }
 
 export async function deleteTodo(req: AuthRequest, res: Response) {
   try {
-    if (req.user?.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Admin access required' });
+    if (req.user?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Admin access required" });
     }
 
     const { id } = req.params;
@@ -1184,24 +1510,27 @@ export async function deleteTodo(req: AuthRequest, res: Response) {
 
     res.json({ success: true });
   } catch (error) {
-    console.error('Delete todo error:', error);
-    res.status(500).json({ error: 'Failed to delete todo' });
+    console.error("Delete todo error:", error);
+    res.status(500).json({ error: "Failed to delete todo" });
   }
 }
 
 // ===== Existing Functions =====
 
-export async function updateAthleteBrandPositioning(req: AuthRequest, res: Response) {
+export async function updateAthleteBrandPositioning(
+  req: AuthRequest,
+  res: Response
+) {
   try {
-    if (req.user?.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Admin access required' });
+    if (req.user?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Admin access required" });
     }
 
     const { athleteId } = req.params as { athleteId?: string };
     const { brandFitSummary } = req.body as { brandFitSummary?: string };
 
     if (!athleteId) {
-      return res.status(400).json({ error: 'athleteId is required' });
+      return res.status(400).json({ error: "athleteId is required" });
     }
 
     const athlete = await prisma.athleteProfile.update({
@@ -1217,15 +1546,18 @@ export async function updateAthleteBrandPositioning(req: AuthRequest, res: Respo
 
     res.json(athlete);
   } catch (error) {
-    console.error('Update brand positioning error:', error);
-    res.status(500).json({ error: 'Failed to update brand positioning' });
+    console.error("Update brand positioning error:", error);
+    res.status(500).json({ error: "Failed to update brand positioning" });
   }
 }
 
-export async function updateAthleteScenarioIdeas(req: AuthRequest, res: Response) {
+export async function updateAthleteScenarioIdeas(
+  req: AuthRequest,
+  res: Response
+) {
   try {
-    if (req.user?.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Admin access required' });
+    if (req.user?.role !== "ADMIN") {
+      return res.status(403).json({ error: "Admin access required" });
     }
 
     const { athleteId } = req.params as { athleteId?: string };
@@ -1240,11 +1572,11 @@ export async function updateAthleteScenarioIdeas(req: AuthRequest, res: Response
     };
 
     if (!athleteId) {
-      return res.status(400).json({ error: 'athleteId is required' });
+      return res.status(400).json({ error: "athleteId is required" });
     }
 
     if (!Array.isArray(scenarioIdeas)) {
-      return res.status(400).json({ error: 'scenarioIdeas must be an array' });
+      return res.status(400).json({ error: "scenarioIdeas must be an array" });
     }
 
     // Delete existing scenario ideas
@@ -1269,8 +1601,7 @@ export async function updateAthleteScenarioIdeas(req: AuthRequest, res: Response
 
     res.json({ scenarioIdeas: createdIdeas });
   } catch (error) {
-    console.error('Update scenario ideas error:', error);
-    res.status(500).json({ error: 'Failed to update scenario ideas' });
+    console.error("Update scenario ideas error:", error);
+    res.status(500).json({ error: "Failed to update scenario ideas" });
   }
 }
-

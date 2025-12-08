@@ -1,13 +1,13 @@
-import { Response } from 'express';
-import { randomBytes } from 'crypto';
-import { prisma } from '../../config/prisma';
-import { AuthRequest } from '../../middleware/auth.middleware';
-import { sendMagicLinkEmail } from '../../services/email.service';
+import { Response } from "express";
+import { randomBytes } from "crypto";
+import { prisma } from "../../config/prisma";
+import { AuthRequest } from "../../middleware/auth.middleware";
+import { sendMagicLinkEmail } from "../../services/email.service";
 
 export async function getCurrentUser(req: AuthRequest, res: Response) {
   try {
     if (!req.userId) {
-      return res.status(401).json({ error: 'Not authenticated' });
+      return res.status(401).json({ error: "Not authenticated" });
     }
 
     const user = await prisma.user.findUnique({
@@ -24,12 +24,13 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     const athlete = user.athlete;
     // Admins and other non-athlete roles don't need onboarding
-    const profileComplete = user.role !== 'ATHLETE' ? true : (athlete?.profileComplete ?? false);
+    const profileComplete =
+      user.role !== "ATHLETE" ? true : (athlete?.profileComplete ?? false);
 
     res.json({
       id: user.id,
@@ -66,8 +67,8 @@ export async function getCurrentUser(req: AuthRequest, res: Response) {
         : null,
     });
   } catch (error) {
-    console.error('Get current user error:', error);
-    res.status(500).json({ error: 'Failed to fetch user' });
+    console.error("Get current user error:", error);
+    res.status(500).json({ error: "Failed to fetch user" });
   }
 }
 
@@ -77,8 +78,8 @@ export async function requestMagicLink(req: Request, res: Response) {
 
     console.log(`[Auth] Login request for email: ${email}`);
 
-    if (!email || typeof email !== 'string') {
-      return res.status(400).json({ error: 'Email is required' });
+    if (!email || typeof email !== "string") {
+      return res.status(400).json({ error: "Email is required" });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
@@ -92,21 +93,22 @@ export async function requestMagicLink(req: Request, res: Response) {
       console.log(`[Auth] User not found for email: ${normalizedEmail}`);
       // Don't reveal if user exists or not for security
       // Return success anyway to prevent email enumeration
-      return res.json({ 
-        success: true, 
-        message: 'If an account exists with that email, a magic link has been sent.' 
+      return res.json({
+        success: true,
+        message:
+          "If an account exists with that email, a magic link has been sent.",
       });
     }
 
     console.log(`[Auth] User found: ${user.id} (${user.email})`);
 
     // Generate secure token
-    const token = randomBytes(32).toString('hex');
+    const token = randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
     // Delete any existing tokens for this email
     await prisma.magicLinkToken.deleteMany({
-      where: { 
+      where: {
         email: normalizedEmail,
         used: false,
       },
@@ -126,14 +128,18 @@ export async function requestMagicLink(req: Request, res: Response) {
     await sendMagicLinkEmail(normalizedEmail, token);
     console.log(`[Auth] Magic link email sent successfully`);
 
-    res.json({ 
-      success: true, 
-      message: 'If an account exists with that email, a magic link has been sent.' 
+    res.json({
+      success: true,
+      message:
+        "If an account exists with that email, a magic link has been sent.",
     });
   } catch (error) {
-    console.error('[Auth] Request magic link error:', error);
-    console.error('[Auth] Error details:', error instanceof Error ? error.message : String(error));
-    res.status(500).json({ error: 'Failed to send magic link' });
+    console.error("[Auth] Request magic link error:", error);
+    console.error(
+      "[Auth] Error details:",
+      error instanceof Error ? error.message : String(error)
+    );
+    res.status(500).json({ error: "Failed to send magic link" });
   }
 }
 
@@ -142,7 +148,7 @@ export async function verifyMagicLink(req: Request, res: Response) {
     const token = (req as any).params?.token;
 
     if (!token) {
-      return res.status(400).json({ error: 'Token is required' });
+      return res.status(400).json({ error: "Token is required" });
     }
 
     // Find token
@@ -151,12 +157,7 @@ export async function verifyMagicLink(req: Request, res: Response) {
     });
 
     if (!magicLink) {
-      return res.status(400).json({ error: 'Invalid or expired token' });
-    }
-
-    // Check if already used
-    if (magicLink.used) {
-      return res.status(400).json({ error: 'This link has already been used' });
+      return res.status(400).json({ error: "Invalid or expired token" });
     }
 
     // Check if expired
@@ -165,7 +166,7 @@ export async function verifyMagicLink(req: Request, res: Response) {
         where: { id: magicLink.id },
         data: { used: true },
       });
-      return res.status(400).json({ error: 'This link has expired' });
+      return res.status(400).json({ error: "This link has expired" });
     }
 
     // Find user by email
@@ -179,7 +180,23 @@ export async function verifyMagicLink(req: Request, res: Response) {
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // If token is already used, check if user is already authenticated
+    // If so, return success anyway (user might have clicked link multiple times)
+    if (magicLink.used) {
+      // Return success with user info - they're already signed in
+      const profileComplete =
+        user.role !== "ATHLETE"
+          ? true
+          : (user.athlete?.profileComplete ?? false);
+      return res.json({
+        success: true,
+        userId: user.id,
+        profileComplete,
+        alreadyUsed: true, // Flag to indicate token was already used
+      });
     }
 
     // Mark token as used
@@ -188,21 +205,17 @@ export async function verifyMagicLink(req: Request, res: Response) {
       data: { used: true },
     });
 
-    // Generate session token (simple for now, can upgrade to JWT later)
-    // For now, we'll return the user ID and the frontend will store it
-    // In production, use proper JWT tokens
-
     // Admins and other non-athlete roles don't need onboarding
-    const profileComplete = user.role !== 'ATHLETE' ? true : (user.athlete?.profileComplete ?? false);
+    const profileComplete =
+      user.role !== "ATHLETE" ? true : (user.athlete?.profileComplete ?? false);
 
-    res.json({ 
+    res.json({
       success: true,
       userId: user.id,
       profileComplete,
     });
   } catch (error) {
-    console.error('Verify magic link error:', error);
-    res.status(500).json({ error: 'Failed to verify magic link' });
+    console.error("Verify magic link error:", error);
+    res.status(500).json({ error: "Failed to verify magic link" });
   }
 }
-

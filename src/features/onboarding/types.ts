@@ -4,25 +4,23 @@ export interface OnboardingFormData {
   bio?: string;
   sport?: string;
   primaryPosition?: string;
-  school?: string;
-  
+  school?: string; // College commit (from Bomber Sync, read-only)
+  highSchool?: string; // High school (manually entered)
+
   // Step 2: Social Profiles
   socialProfiles: SocialProfileInput[];
-  
+
   // Step 3: About You (interests)
   interests: InterestInput[];
-  
+
   // Step 4: Profile Photo
   avatarUrl?: string;
   videoUrl?: string; // Optional video link or upload URL
 }
 
 export interface SocialProfileInput {
-  platform: 'instagram' | 'tiktok' | 'youtube' | 'x';
+  platform: "instagram" | "tiktok" | "youtube" | "x";
   handle: string;
-  followers: number;
-  avgEngagementRate?: number;
-  avgViews?: number;
   postingCadence?: string;
 }
 
@@ -42,28 +40,27 @@ export interface StepConfig {
 export const STEPS: StepConfig[] = [
   {
     id: 1,
-    title: 'Welcome & Basic Info',
-    description: 'Tell us about yourself',
+    title: "Welcome & Basic Info",
+    description: "Tell us about yourself",
   },
   {
     id: 2,
-    title: 'Social Media Profiles',
-    description: 'Connect your social accounts',
+    title: "Social Media Profiles",
+    description: "Connect your social accounts",
   },
   {
     id: 3,
-    title: 'About You',
-    description: 'Share your interests',
+    title: "About You",
+    description: "Share your interests",
   },
   {
     id: 4,
-    title: 'Profile Photo',
-    description: 'Upload your photo',
+    title: "Profile Photo",
+    description: "Upload your photo",
   },
   {
     id: 5,
-    title: 'Review & Complete',
-    description: 'Review your information',
+    title: "Review & Complete",
+    description: "Review your information",
   },
 ];
-

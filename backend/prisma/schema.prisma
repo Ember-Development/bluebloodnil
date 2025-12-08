@@ -50,69 +50,76 @@ model User {
   email      String          @unique
   role       UserRole
   externalId String?         @unique
+  firstName  String?
+  lastName   String?
   athlete    AthleteProfile?
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
 }
 
 model AthleteProfile {
-  id               String                @id @default(cuid())
-  user             User                  @relation(fields: [userId], references: [id])
-  userId           String                @unique
-  name             String
-  firstName        String?
-  lastName         String?
-  position         String?
-  position1        String?
-  position2        String?
-  school           String?
-  teamName         String?
-  jerseyNumber     Int?
-  classYear        Int?
-  gradYear         Int?
-  ageGroup         String?
-  address          String?
-  location         String?
-  bio              String?
-  sport            String?
-  primaryPosition  String?
-  avatarUrl        String?
-  videoUrl         String?               // Optional video link or upload URL
-  nilScore         Int?
-  profileComplete  Boolean               @default(false)
-  brandFitSummary  String?               // Admin-managed: Brand positioning and fit description
-  socialProfiles   AthleteSocialProfile[]
-  interests        AthleteInterest[]
-  parentContacts   ParentContact[]
-  contents         Content[]
-  participants     CampaignParticipant[]
-  scenarioIdeas    ScenarioIdea[]
-  milestones       Milestone[]
-  todos            Todo[]
-  createdAt        DateTime              @default(now())
-  updatedAt        DateTime              @updatedAt
+  id              String                 @id @default(cuid())
+  user            User                   @relation(fields: [userId], references: [id])
+  userId          String                 @unique
+  name            String
+  firstName       String?
+  lastName        String?
+  position        String?
+  position1       String?
+  position2       String?
+  school          String? // College commit (from Bomber Sync)
+  highSchool      String? // High school (manually entered)
+  teamName        String?
+  jerseyNumber    Int?
+  classYear       Int?
+  gradYear        Int?
+  ageGroup        String?
+  address         String?
+  location        String?
+  bio             String?
+  sport           String?
+  primaryPosition String?
+  avatarUrl       String?
+  videoUrl        String? // Optional video link or upload URL
+  nilScore        Int?
+  profileComplete Boolean                @default(false)
+  brandFitSummary String? // Admin-managed: Brand positioning and fit description
+  socialProfiles  AthleteSocialProfile[]
+  interests       AthleteInterest[]
+  parentContacts  ParentContact[]
+  contents        Content[]
+  participants    CampaignParticipant[]
+  scenarioIdeas   ScenarioIdea[]
+  milestones      Milestone[]
+  todos           Todo[]
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
 }
 
 model Organization {
-  id         String      @id @default(cuid())
-  name       String
-  logoUrl    String?
-  tier       String?
-  campaigns  Campaign[]
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id        String     @id @default(cuid())
+  name      String
+  logoUrl   String?
+  tier      String?
+  category  String? // Type of business/company
+  campaigns Campaign[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 }
 
 model Campaign {
-  id                 String                @id @default(cuid())
+  id                  String                @id @default(cuid())
   title               String
   description         String?
   type                CampaignType
   status              CampaignStatus        @default(DRAFT)
   isOpen              Boolean               @default(false)
-  address             String?               // For in-person campaigns
-  totalEarnings       Float?                // Total campaign budget
+  address             String? // For in-person campaigns
+  startDate           DateTime? // Campaign start date
+  endDate             DateTime? // Campaign end date
+  totalEarnings       Float? // Total campaign budget
   earningsSplitMethod EarningsSplitMethod   @default(EQUAL)
+  results             Json? // Campaign results data (flexible JSON)
   organization        Organization          @relation(fields: [organizationId], references: [id])
   organizationId      String
   participants        CampaignParticipant[]
@@ -121,86 +128,90 @@ model Campaign {
 }
 
 model CampaignParticipant {
-  id         String             @id @default(cuid())
-  campaign   Campaign           @relation(fields: [campaignId], references: [id])
+  id         String            @id @default(cuid())
+  campaign   Campaign          @relation(fields: [campaignId], references: [id])
   campaignId String
-  athlete    AthleteProfile     @relation(fields: [athleteId], references: [id])
+  athlete    AthleteProfile    @relation(fields: [athleteId], references: [id])
   athleteId  String
-  status     ParticipantStatus  @default(INVITED)
-  earnings   Float?              // Individual athlete earnings
-  appliedAt  DateTime?          // When athlete applied (if status is APPLIED)
-  createdAt  DateTime           @default(now())
-  updatedAt  DateTime           @updatedAt
+  status     ParticipantStatus @default(INVITED)
+  earnings   Float? // Individual athlete earnings
+  appliedAt  DateTime? // When athlete applied (if status is APPLIED)
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
 }
 
 model Content {
-  id        String          @id @default(cuid())
-  athlete   AthleteProfile  @relation(fields: [athleteId], references: [id])
+  id        String         @id @default(cuid())
+  athlete   AthleteProfile @relation(fields: [athleteId], references: [id])
   athleteId String
   type      String
   mediaUrl  String
   caption   String?
-  createdAt DateTime        @default(now())
+  createdAt DateTime       @default(now())
 }
 
 model ParentContact {
-  id          String          @id @default(cuid())
-  athlete     AthleteProfile  @relation(fields: [athleteId], references: [id])
-  athleteId   String
-  firstName   String
-  lastName    String
-  email       String?
-  phone       String?
-  relationship String?        // e.g., "Mother", "Father", "Guardian"
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id           String         @id @default(cuid())
+  athlete      AthleteProfile @relation(fields: [athleteId], references: [id])
+  athleteId    String
+  firstName    String
+  lastName     String
+  email        String?
+  phone        String?
+  relationship String? // e.g., "Mother", "Father", "Guardian"
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 }
 
 model AthleteSocialProfile {
-  id                String          @id @default(cuid())
-  athlete           AthleteProfile  @relation(fields: [athleteId], references: [id])
+  id                String         @id @default(cuid())
+  athlete           AthleteProfile @relation(fields: [athleteId], references: [id])
   athleteId         String
-  platform          String          // 'instagram', 'tiktok', 'youtube', 'x'
+  platform          String // 'instagram', 'tiktok', 'youtube', 'x'
   handle            String
-  followers         Int             @default(0)
-  avgEngagementRate Float?          // percentage
-  avgViews          Int?            @default(0)
+  followers         Int            @default(0)
+  avgEngagementRate Float? // percentage
+  avgViews          Int?           @default(0)
   postingCadence    String?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  lastScrapedAt     DateTime? // When metrics were last scraped
+  scrapingStatus    String? // 'success', 'failed', 'pending', null
+  scrapingError     String? // Error message if scraping failed
+  totalReach        Int? // Calculated total reach across all platforms
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 }
 
 model AthleteInterest {
-  id        String          @id @default(cuid())
-  athlete   AthleteProfile  @relation(fields: [athleteId], references: [id])
+  id        String         @id @default(cuid())
+  athlete   AthleteProfile @relation(fields: [athleteId], references: [id])
   athleteId String
   label     String
   color     String?
-  createdAt DateTime        @default(now())
+  createdAt DateTime       @default(now())
 }
 
 model ScenarioIdea {
-  id          String          @id @default(cuid())
-  athlete     AthleteProfile  @relation(fields: [athleteId], references: [id])
+  id          String         @id @default(cuid())
+  athlete     AthleteProfile @relation(fields: [athleteId], references: [id])
   athleteId   String
   title       String
   goal        String
   description String
   idealBrands String
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 }
 
 model Milestone {
-  id          String          @id @default(cuid())
-  athlete     AthleteProfile  @relation(fields: [athleteId], references: [id])
+  id          String         @id @default(cuid())
+  athlete     AthleteProfile @relation(fields: [athleteId], references: [id])
   athleteId   String
   title       String
-  date        DateTime        // Store as DateTime for proper sorting
+  date        DateTime // Store as DateTime for proper sorting
   description String?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
   @@index([athleteId])
 }
 
@@ -217,18 +228,18 @@ model Todo {
   athleteId         String
   title             String
   description       String
-  assignedBy        String                // Admin name or ID
+  assignedBy        String // Admin name or ID
   dueDate           DateTime
   status            String                @default("pending") // 'pending' | 'in_progress' | 'completed'
-  priority          String                @default("medium")   // 'low' | 'medium' | 'high'
-  campaignId        String?               // Optional link to a campaign
-  verificationType  TodoVerificationType?  // Type of verification required
-  verificationUrl   String?               // Link to social post, video, etc.
-  verificationNotes String?               // Additional notes from athlete
-  verifiedAt        DateTime?             // When athlete submitted verification
+  priority          String                @default("medium") // 'low' | 'medium' | 'high'
+  campaignId        String? // Optional link to a campaign
+  verificationType  TodoVerificationType? // Type of verification required
+  verificationUrl   String? // Link to social post, video, etc.
+  verificationNotes String? // Additional notes from athlete
+  verifiedAt        DateTime? // When athlete submitted verification
   createdAt         DateTime              @default(now())
   updatedAt         DateTime              @updatedAt
-  
+
   @@index([athleteId])
   @@index([campaignId])
 }
@@ -241,31 +252,31 @@ enum FeedPostType {
 }
 
 model FeedPost {
-  id            String        @id @default(cuid())
-  type          FeedPostType
-  headline      String
-  body          String
-  tags          String[]      @default([])
-  authorId      String?       // User ID or organization ID
-  authorName    String
-  authorRole    String
+  id              String       @id @default(cuid())
+  type            FeedPostType
+  headline        String
+  body            String
+  tags            String[]     @default([])
+  authorId        String? // User ID or organization ID
+  authorName      String
+  authorRole      String
   authorAvatarUrl String?
-  authorOrg     String?
-  statLine      String?       // For athlete_update
-  mediaUrl      String?       // For athlete_update
-  brand         String?       // For campaign
-  brandLogoUrl  String?       // For campaign
-  objective     String?       // For campaign
-  campaignStatus String?      // For campaign: 'planning' | 'live' | 'wrapped'
-  program       String?       // For commitment
-  level         String?       // For commitment: 'D1' | 'D2' | 'NAIA' | 'JUCO' | 'HS' | 'Club'
-  campaignId    String?       // Link to campaign if type is CAMPAIGN
-  organizationId String?     // Link to organization if type is ORG_ANNOUNCEMENT or CAMPAIGN
-  athleteId     String?       // Link to athlete if post is about/for this athlete
-  isOpen        Boolean?      // For campaign posts: whether campaign is open for applications
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  
+  authorOrg       String?
+  statLine        String? // For athlete_update
+  mediaUrl        String? // For athlete_update
+  brand           String? // For campaign
+  brandLogoUrl    String? // For campaign
+  objective       String? // For campaign
+  campaignStatus  String? // For campaign: 'planning' | 'live' | 'wrapped'
+  program         String? // For commitment
+  level           String? // For commitment: 'D1' | 'D2' | 'NAIA' | 'JUCO' | 'HS' | 'Club'
+  campaignId      String? // Link to campaign if type is CAMPAIGN
+  organizationId  String? // Link to organization if type is ORG_ANNOUNCEMENT or CAMPAIGN
+  athleteId       String? // Link to athlete if post is about/for this athlete
+  isOpen          Boolean? // For campaign posts: whether campaign is open for applications
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
   @@index([type])
   @@index([campaignId])
   @@index([organizationId])
@@ -282,17 +293,17 @@ enum NotificationType {
 }
 
 model Notification {
-  id          String            @id @default(cuid())
-  userId      String?           // If null, it's a broadcast to all users
-  type        NotificationType
-  title       String
-  message     String
-  read        Boolean           @default(false)
-  linkUrl     String?           // Optional link to related content
-  campaignId String?           // Link to campaign if applicable
-  todoId     String?           // Link to todo if applicable
-  createdAt   DateTime          @default(now())
-  
+  id         String           @id @default(cuid())
+  userId     String? // If null, it's a broadcast to all users
+  type       NotificationType
+  title      String
+  message    String
+  read       Boolean          @default(false)
+  linkUrl    String? // Optional link to related content
+  campaignId String? // Link to campaign if applicable
+  todoId     String? // Link to todo if applicable
+  createdAt  DateTime         @default(now())
+
   @@index([userId])
   @@index([read])
   @@index([createdAt])
@@ -305,8 +316,7 @@ model MagicLinkToken {
   expiresAt DateTime
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
-  
+
   @@index([token])
   @@index([email])
 }
-

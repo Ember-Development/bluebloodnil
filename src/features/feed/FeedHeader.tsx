@@ -1,20 +1,21 @@
 interface FeedHeaderProps {
-  activeFilter: string
-  onFilterChange: (value: string) => void
+  activeFilter: string;
+  onFilterChange: (value: string) => void;
 }
 
-const FILTERS = ['All', 'Athletes', 'Campaigns', 'Org']
+// const FILTERS = ["All", "Athletes", "Campaigns", "Org"];
 
-export function FeedHeader({ activeFilter, onFilterChange }: FeedHeaderProps) {
+export function FeedHeader({}: FeedHeaderProps) {
   return (
     <header className="feed-header">
       <div>
         <h1 className="feed-title">Feed</h1>
         <p className="feed-subtitle">
-          Real-time updates from athletes, campaigns, and the BlueBloods NIL desk.
+          Real-time updates from athletes, campaigns, and the BlueBloods NIL
+          desk.
         </p>
       </div>
-      <div className="feed-filters">
+      {/* <div className="feed-filters">
         {FILTERS.map((filter) => (
           <button
             key={filter}
@@ -25,8 +26,7 @@ export function FeedHeader({ activeFilter, onFilterChange }: FeedHeaderProps) {
             {filter}
           </button>
         ))}
-      </div>
+      </div> */}
     </header>
-  )
+  );
 }
-

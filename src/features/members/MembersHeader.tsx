@@ -1,11 +1,11 @@
 interface MembersHeaderProps {
-  searchQuery: string
-  onSearchChange: (value: string) => void
-  activeFilter: string
-  onFilterChange: (value: string) => void
+  searchQuery: string;
+  onSearchChange: (value: string) => void;
+  activeFilter: string;
+  onFilterChange: (value: string) => void;
 }
 
-const FILTERS = ['All', 'Brands', 'Facilities', 'Sponsors', 'Partners']
+const FILTERS = ["All", "Brands", "Facilities", "Sponsors", "Partners"];
 
 export function MembersHeader({
   searchQuery,
@@ -16,9 +16,10 @@ export function MembersHeader({
   return (
     <header className="members-header">
       <div>
-        <h1 className="members-title">Members / Brands</h1>
+        <h1 className="members-title">Brand Partners</h1>
         <p className="members-subtitle">
-          Explore our network of NIL partners, training facilities, and brand sponsors.
+          Explore our network of NIL partners, training facilities, and brand
+          sponsors.
         </p>
       </div>
       <div className="members-controls">
@@ -48,7 +49,7 @@ export function MembersHeader({
             <button
               key={filter}
               type="button"
-              className={`members-filter-pill ${activeFilter === filter ? 'active' : ''}`}
+              className={`members-filter-pill ${activeFilter === filter ? "active" : ""}`}
               onClick={() => onFilterChange(filter)}
             >
               {filter}
@@ -57,6 +58,5 @@ export function MembersHeader({
         </div>
       </div>
     </header>
-  )
+  );
 }
-

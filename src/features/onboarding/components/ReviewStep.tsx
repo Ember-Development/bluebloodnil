@@ -1,6 +1,6 @@
-import { useAuth } from '../../../contexts/AuthContext';
-import type { OnboardingFormData } from '../types';
-import './ReviewStep.css';
+import { useAuth } from "../../../contexts/AuthContext";
+import type { OnboardingFormData } from "../types";
+import "./ReviewStep.css";
 
 interface ReviewStepProps {
   formData: OnboardingFormData;
@@ -9,7 +9,12 @@ interface ReviewStepProps {
   isSubmitting: boolean;
 }
 
-export function ReviewStep({ formData, onBack, onSubmit, isSubmitting }: ReviewStepProps) {
+export function ReviewStep({
+  formData,
+  onBack,
+  onSubmit,
+  isSubmitting,
+}: ReviewStepProps) {
   const { user } = useAuth();
   const athlete = user?.athlete;
 
@@ -26,7 +31,10 @@ export function ReviewStep({ formData, onBack, onSubmit, isSubmitting }: ReviewS
           <div className="review-content">
             <div className="review-item">
               <span className="review-label">Name:</span>
-              <span className="review-value">{athlete?.name || `${athlete?.firstName || ''} ${athlete?.lastName || ''}`.trim()}</span>
+              <span className="review-value">
+                {athlete?.name ||
+                  `${athlete?.firstName || ""} ${athlete?.lastName || ""}`.trim()}
+              </span>
             </div>
             {formData.location && (
               <div className="review-item">
@@ -46,9 +54,15 @@ export function ReviewStep({ formData, onBack, onSubmit, isSubmitting }: ReviewS
                 <span className="review-value">{formData.primaryPosition}</span>
               </div>
             )}
+            {formData.highSchool && (
+              <div className="review-item">
+                <span className="review-label">High School:</span>
+                <span className="review-value">{formData.highSchool}</span>
+              </div>
+            )}
             {formData.school && (
               <div className="review-item">
-                <span className="review-label">School:</span>
+                <span className="review-label">College Commit:</span>
                 <span className="review-value">{formData.school}</span>
               </div>
             )}
@@ -68,11 +82,13 @@ export function ReviewStep({ formData, onBack, onSubmit, isSubmitting }: ReviewS
               {formData.socialProfiles.map((profile, index) => (
                 <div key={index} className="review-item review-item-full">
                   <div className="social-profile-review">
-                    <span className="social-platform-badge">{profile.platform}</span>
+                    <span className="social-platform-badge">
+                      {profile.platform}
+                    </span>
                     <span className="review-value">@{profile.handle}</span>
-                    {profile.followers > 0 && (
+                    {profile.postingCadence && (
                       <span className="review-meta">
-                        {profile.followers.toLocaleString()} followers
+                        {profile.postingCadence}
                       </span>
                     )}
                   </div>
@@ -114,9 +130,9 @@ export function ReviewStep({ formData, onBack, onSubmit, isSubmitting }: ReviewS
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
-                    color: 'var(--color-accentSoft)',
-                    textDecoration: 'underline',
-                    wordBreak: 'break-all',
+                    color: "var(--color-accentSoft)",
+                    textDecoration: "underline",
+                    wordBreak: "break-all",
                   }}
                 >
                   {formData.videoUrl}
@@ -128,14 +144,21 @@ export function ReviewStep({ formData, onBack, onSubmit, isSubmitting }: ReviewS
       </div>
 
       <div className="step-actions">
-        <button className="btn-secondary" onClick={onBack} disabled={isSubmitting}>
+        <button
+          className="btn-secondary"
+          onClick={onBack}
+          disabled={isSubmitting}
+        >
           Back
         </button>
-        <button className="btn-primary" onClick={onSubmit} disabled={isSubmitting}>
-          {isSubmitting ? 'Completing...' : 'Complete Profile'}
+        <button
+          className="btn-primary"
+          onClick={onSubmit}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Completing..." : "Complete Profile"}
         </button>
       </div>
     </div>
   );
 }
-

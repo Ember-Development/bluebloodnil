@@ -1,24 +1,24 @@
-import { useState } from 'react';
-import './admin.css';
-import { MOCK_ATHLETES } from '../athletes/types';
+import { useState } from "react";
+import "./admin.css";
+import { MOCK_ATHLETES } from "../athletes/types";
 
 // Mock notifications
 const MOCK_NOTIFICATIONS = [
   {
-    id: '1',
-    title: 'New Campaign Opportunity',
-    message: 'Elite Softball Gear has a new campaign available for athletes.',
-    targetAudience: 'athletes',
-    sentAt: '2024-04-20T10:30:00Z',
-    status: 'sent',
+    id: "1",
+    title: "New Campaign Opportunity",
+    message: "Elite Softball Gear has a new campaign available for athletes.",
+    targetAudience: "athletes",
+    sentAt: "2024-04-20T10:30:00Z",
+    status: "sent",
   },
   {
-    id: '2',
-    title: 'Compliance Webinar Reminder',
-    message: 'Reminder: NIL compliance webinar starts in 2 hours.',
-    targetAudience: 'all',
-    sentAt: '2024-04-19T14:00:00Z',
-    status: 'sent',
+    id: "2",
+    title: "Compliance Webinar Reminder",
+    message: "Reminder: NIL compliance webinar starts in 2 hours.",
+    targetAudience: "all",
+    sentAt: "2024-04-19T14:00:00Z",
+    status: "sent",
   },
 ];
 
@@ -26,17 +26,20 @@ export function NotificationCenter() {
   const [notifications] = useState(MOCK_NOTIFICATIONS);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    title: '',
-    message: '',
-    targetAudience: 'all' as 'all' | 'athletes' | 'brands' | 'specific',
+    title: "",
+    message: "",
+    targetAudience: "all" as "all" | "athletes" | "brands" | "specific",
     targetIds: [] as string[],
-    priority: 'medium' as 'low' | 'medium' | 'high',
-    scheduledFor: '',
+    priority: "medium" as "low" | "medium" | "high",
+    scheduledFor: "",
   });
 
   return (
     <div>
-      <div className="management-section" style={{ marginBottom: 'var(--space-xl)' }}>
+      <div
+        className="management-section"
+        style={{ marginBottom: "var(--space-xl)" }}
+      >
         <div className="section-header">
           <h2 className="section-title">Push Notifications</h2>
           <button className="btn-add" onClick={() => setShowForm(!showForm)}>
@@ -44,62 +47,135 @@ export function NotificationCenter() {
           </button>
         </div>
 
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Message</th>
-              <th>Target</th>
-              <th>Sent At</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {notifications.map((notification) => (
-              <tr key={notification.id}>
-                <td style={{ fontWeight: 600 }}>{notification.title}</td>
-                <td style={{ color: 'var(--color-muted)', fontSize: '0.9rem' }}>
-                  {notification.message}
-                </td>
-                <td>
-                  <span
-                    style={{
-                      padding: '4px 10px',
-                      borderRadius: '999px',
-                      fontSize: '0.75rem',
-                      background: 'rgba(98, 183, 255, 0.2)',
-                      color: 'var(--color-accentSoft)',
-                      border: '1px solid rgba(98, 183, 255, 0.4)',
-                      textTransform: 'capitalize',
-                    }}
+        {/* Desktop Table View */}
+        <div className="table-container">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Message</th>
+                <th>Target</th>
+                <th>Sent At</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {notifications.map((notification) => (
+                <tr key={notification.id}>
+                  <td style={{ fontWeight: 600 }}>{notification.title}</td>
+                  <td
+                    style={{ color: "var(--color-muted)", fontSize: "0.9rem" }}
                   >
-                    {notification.targetAudience}
-                  </span>
-                </td>
-                <td>{new Date(notification.sentAt).toLocaleString()}</td>
-                <td>
+                    {notification.message}
+                  </td>
+                  <td>
+                    <span
+                      style={{
+                        padding: "4px 10px",
+                        borderRadius: "999px",
+                        fontSize: "0.75rem",
+                        background: "rgba(98, 183, 255, 0.2)",
+                        color: "var(--color-accentSoft)",
+                        border: "1px solid rgba(98, 183, 255, 0.4)",
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {notification.targetAudience}
+                    </span>
+                  </td>
+                  <td>{new Date(notification.sentAt).toLocaleString()}</td>
+                  <td>
+                    <span
+                      style={{
+                        padding: "4px 10px",
+                        borderRadius: "999px",
+                        fontSize: "0.75rem",
+                        background: "rgba(93, 211, 158, 0.2)",
+                        color: "var(--color-success)",
+                        border: "1px solid rgba(93, 211, 158, 0.4)",
+                      }}
+                    >
+                      {notification.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="notification-cards-mobile">
+          {notifications.length === 0 ? (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "2rem",
+                color: "var(--color-muted)",
+              }}
+            >
+              No notifications yet. Create your first notification above.
+            </div>
+          ) : (
+            notifications.map((notification) => (
+              <div key={notification.id} className="notification-card-mobile">
+                <div className="notification-card-header">
+                  <h3 className="notification-card-title">
+                    {notification.title}
+                  </h3>
                   <span
                     style={{
-                      padding: '4px 10px',
-                      borderRadius: '999px',
-                      fontSize: '0.75rem',
-                      background: 'rgba(93, 211, 158, 0.2)',
-                      color: 'var(--color-success)',
-                      border: '1px solid rgba(93, 211, 158, 0.4)',
+                      padding: "4px 10px",
+                      borderRadius: "999px",
+                      fontSize: "0.75rem",
+                      background: "rgba(93, 211, 158, 0.2)",
+                      color: "var(--color-success)",
+                      border: "1px solid rgba(93, 211, 158, 0.4)",
+                      whiteSpace: "nowrap",
                     }}
                   >
                     {notification.status}
                   </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </div>
+                <p className="notification-card-message">
+                  {notification.message}
+                </p>
+                <div className="notification-card-details">
+                  <div className="notification-card-detail">
+                    <span className="detail-label">Target</span>
+                    <span
+                      style={{
+                        padding: "4px 10px",
+                        borderRadius: "999px",
+                        fontSize: "0.75rem",
+                        background: "rgba(98, 183, 255, 0.2)",
+                        color: "var(--color-accentSoft)",
+                        border: "1px solid rgba(98, 183, 255, 0.4)",
+                        textTransform: "capitalize",
+                        display: "inline-block",
+                      }}
+                    >
+                      {notification.targetAudience}
+                    </span>
+                  </div>
+                  <div className="notification-card-detail">
+                    <span className="detail-label">Sent At</span>
+                    <span className="detail-value">
+                      {new Date(notification.sentAt).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {showForm && (
         <div className="form-section">
-          <h3 style={{ marginBottom: 'var(--space-lg)' }}>Create Notification</h3>
+          <h3 style={{ marginBottom: "var(--space-lg)" }}>
+            Create Notification
+          </h3>
           <div className="form-group">
             <label className="form-label">Title</label>
             <input
@@ -107,7 +183,9 @@ export function NotificationCenter() {
               className="form-input"
               placeholder="Notification title"
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, title: e.target.value })
+              }
             />
           </div>
           <div className="form-group">
@@ -116,7 +194,9 @@ export function NotificationCenter() {
               className="form-textarea"
               placeholder="Notification message..."
               value={formData.message}
-              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, message: e.target.value })
+              }
             />
           </div>
           <div className="form-row">
@@ -128,7 +208,11 @@ export function NotificationCenter() {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    targetAudience: e.target.value as 'all' | 'athletes' | 'brands' | 'specific',
+                    targetAudience: e.target.value as
+                      | "all"
+                      | "athletes"
+                      | "brands"
+                      | "specific",
                   })
                 }
               >
@@ -146,7 +230,7 @@ export function NotificationCenter() {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    priority: e.target.value as 'low' | 'medium' | 'high',
+                    priority: e.target.value as "low" | "medium" | "high",
                   })
                 }
               >
@@ -156,16 +240,19 @@ export function NotificationCenter() {
               </select>
             </div>
           </div>
-          {formData.targetAudience === 'specific' && (
+          {formData.targetAudience === "specific" && (
             <div className="form-group">
               <label className="form-label">Select Athletes</label>
               <select
                 className="form-select"
                 multiple
-                style={{ minHeight: '120px' }}
+                style={{ minHeight: "120px" }}
                 value={formData.targetIds}
                 onChange={(e) => {
-                  const selected = Array.from(e.target.selectedOptions, (option) => option.value);
+                  const selected = Array.from(
+                    e.target.selectedOptions,
+                    (option) => option.value
+                  );
                   setFormData({ ...formData, targetIds: selected });
                 }}
               >
@@ -175,7 +262,13 @@ export function NotificationCenter() {
                   </option>
                 ))}
               </select>
-              <small style={{ color: 'var(--color-muted)', fontSize: '0.75rem', marginTop: '4px' }}>
+              <small
+                style={{
+                  color: "var(--color-muted)",
+                  fontSize: "0.75rem",
+                  marginTop: "4px",
+                }}
+              >
                 Hold Ctrl/Cmd to select multiple
               </small>
             </div>
@@ -186,7 +279,9 @@ export function NotificationCenter() {
               type="datetime-local"
               className="form-input"
               value={formData.scheduledFor}
-              onChange={(e) => setFormData({ ...formData, scheduledFor: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, scheduledFor: e.target.value })
+              }
             />
           </div>
           <div className="form-actions">
@@ -200,4 +295,3 @@ export function NotificationCenter() {
     </div>
   );
 }
-

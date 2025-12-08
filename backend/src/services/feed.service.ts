@@ -1,7 +1,7 @@
-import { prisma } from '../config/prisma';
+import { prisma } from "../config/prisma";
 
 export async function createFeedPost(data: {
-  type: 'ORG_ANNOUNCEMENT' | 'CAMPAIGN';
+  type: "ORG_ANNOUNCEMENT" | "CAMPAIGN";
   headline: string;
   body: string;
   tags: string[];
@@ -12,7 +12,7 @@ export async function createFeedPost(data: {
   brand?: string;
   brandLogoUrl?: string;
   objective?: string;
-  campaignStatus?: 'planning' | 'live' | 'wrapped';
+  campaignStatus?: "planning" | "live" | "wrapped";
   campaignId?: string;
   organizationId?: string;
   athleteId?: string;
@@ -50,26 +50,29 @@ export async function createAthleteCampaignPost(data: {
   organizationId: string;
   organizationLogoUrl?: string;
   campaignType: string;
-  earnings?: number;
+  // Remove earnings parameter
 }) {
-  const earningsText = data.earnings 
-    ? ` with earnings of $${data.earnings.toLocaleString()}` 
-    : '';
+  // Remove earningsText calculation
   
   return await prisma.feedPost.create({
     data: {
-      type: 'CAMPAIGN',
+      type: "CAMPAIGN",
       headline: `🎉 ${data.athleteName} selected for ${data.organizationName} campaign!`,
-      body: `Congratulations to ${data.athleteName} for being selected to participate in "${data.campaignTitle}" with ${data.organizationName}! This ${data.campaignType.toLowerCase().replace('_', ' ')} campaign${earningsText ? earningsText : ''} represents an exciting NIL opportunity. We're proud to support our athletes in building their brand and creating meaningful partnerships.`,
-      tags: ['Campaign', 'Athlete Spotlight', data.organizationName, data.athleteName],
-      authorName: 'BlueBloods NIL Desk',
-      authorRole: 'Org NIL & Partnerships',
-      authorAvatarUrl: 'https://placehold.co/64x64',
-      authorOrg: 'BlueBloods Select',
+      body: `Congratulations to ${data.athleteName} for being selected to participate in "${data.campaignTitle}" with ${data.organizationName}! This ${data.campaignType.toLowerCase().replace("_", " ")} campaign represents an exciting NIL opportunity. We're proud to support our athletes in building their brand and creating meaningful partnerships.`,
+      tags: [
+        "Campaign",
+        "Athlete Spotlight",
+        data.organizationName,
+        data.athleteName,
+      ],
+      authorName: "BlueBloods NIL Desk",
+      authorRole: "Org NIL & Partnerships",
+      authorAvatarUrl: "https://placehold.co/64x64",
+      authorOrg: "BlueBloods Select",
       brand: data.organizationName,
-      brandLogoUrl: data.organizationLogoUrl || 'https://placehold.co/56x56',
+      brandLogoUrl: data.organizationLogoUrl || "https://placehold.co/56x56",
       objective: `Celebrating ${data.athleteName}'s selection for ${data.campaignTitle}`,
-      campaignStatus: 'live',
+      campaignStatus: "live",
       campaignId: data.campaignId,
       organizationId: data.organizationId,
       athleteId: data.athleteId,
@@ -89,17 +92,14 @@ export async function createCampaignRecapPost(data: {
     verificationUrl?: string;
     verificationNotes?: string;
   }>;
-  totalEarnings?: number;
-  participants: Array<{
-    athleteName: string;
-    earnings?: number;
-  }>;
+  resultsText?: string;
+  // Remove totalEarnings and participants parameters
 }) {
-  // Build recap body with verification content and earnings
+  // Build recap body with verification content (no earnings)
   let recapBody = `Campaign Recap: ${data.campaignTitle}\n\n`;
   
   if (data.verificationContent.length > 0) {
-    recapBody += 'Verification Submissions:\n';
+    recapBody += "Verification Submissions:\n";
     data.verificationContent.forEach((item, index) => {
       recapBody += `\n${index + 1}. ${item.athleteName}:\n`;
       if (item.verificationUrl) {
@@ -109,38 +109,33 @@ export async function createCampaignRecapPost(data: {
         recapBody += `   Notes: ${item.verificationNotes}\n`;
       }
     });
-    recapBody += '\n';
+    recapBody += "\n";
   }
 
-  if (data.totalEarnings) {
-    recapBody += `Total Earnings: $${data.totalEarnings.toLocaleString()}\n\n`;
-    if (data.participants.length > 0) {
-      recapBody += 'Earnings Breakdown:\n';
-      data.participants.forEach(participant => {
-        const earnings = participant.earnings ? `$${participant.earnings.toLocaleString()}` : 'N/A';
-        recapBody += `• ${participant.athleteName}: ${earnings}\n`;
-      });
-    }
+  // Remove the earnings section entirely (lines 121-132)
+
+  // Add results if provided
+  if (data.resultsText) {
+    recapBody += data.resultsText;
   }
 
   return await prisma.feedPost.create({
     data: {
-      type: 'CAMPAIGN',
+      type: "CAMPAIGN",
       headline: `Campaign Complete: ${data.campaignTitle}`,
       body: recapBody,
-      tags: ['Campaign', 'Recap', data.organizationName],
+      tags: ["Campaign", "Recap", data.organizationName],
       authorName: data.organizationName,
-      authorRole: 'Partner Brand',
-      authorAvatarUrl: data.organizationLogoUrl || 'https://placehold.co/64x64',
+      authorRole: "Partner Brand",
+      authorAvatarUrl: data.organizationLogoUrl || "https://placehold.co/64x64",
       authorOrg: data.organizationName,
       brand: data.organizationName,
-      brandLogoUrl: data.organizationLogoUrl || 'https://placehold.co/56x56',
+      brandLogoUrl: data.organizationLogoUrl || "https://placehold.co/56x56",
       objective: recapBody,
-      campaignStatus: 'wrapped',
+      campaignStatus: "wrapped",
       campaignId: data.campaignId,
       organizationId: data.organizationId,
       isOpen: false,
     },
   });
 }
-

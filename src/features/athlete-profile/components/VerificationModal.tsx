@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { apiClient } from '../../../lib/apiClient';
-import './VerificationModal.css';
+import { useState } from "react";
+import { apiClient } from "../../../lib/apiClient";
+import "./VerificationModal.css";
 
 interface VerificationModalProps {
   isOpen: boolean;
@@ -8,32 +8,43 @@ interface VerificationModalProps {
   todo: {
     id: string;
     title: string;
-    verificationType: 'SOCIAL_POST' | 'IN_PERSON_EVENT' | 'COMMERCIAL_VIDEO' | 'OTHER' | null | undefined;
+    verificationType:
+      | "SOCIAL_POST"
+      | "IN_PERSON_EVENT"
+      | "COMMERCIAL_VIDEO"
+      | "OTHER"
+      | null
+      | undefined;
   };
   onSuccess: () => void;
 }
 
-type VerificationStep = 'intro' | 'input' | 'review' | 'success';
+type VerificationStep = "intro" | "input" | "review" | "success";
 
-export function VerificationModal({ isOpen, onClose, todo, onSuccess }: VerificationModalProps) {
-  const [currentStep, setCurrentStep] = useState<VerificationStep>('intro');
-  const [verificationUrl, setVerificationUrl] = useState('');
-  const [verificationNotes, setVerificationNotes] = useState('');
-  const [location, setLocation] = useState('');
-  const [eventTime, setEventTime] = useState('');
-  const [contactName, setContactName] = useState('');
-  const [contactInfo, setContactInfo] = useState('');
+export function VerificationModal({
+  isOpen,
+  onClose,
+  todo,
+  onSuccess,
+}: VerificationModalProps) {
+  const [currentStep, setCurrentStep] = useState<VerificationStep>("intro");
+  const [verificationUrl, setVerificationUrl] = useState("");
+  const [verificationNotes, setVerificationNotes] = useState("");
+  const [location, setLocation] = useState("");
+  const [eventTime, setEventTime] = useState("");
+  const [contactName, setContactName] = useState("");
+  const [contactInfo, setContactInfo] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const resetForm = () => {
-    setCurrentStep('intro');
-    setVerificationUrl('');
-    setVerificationNotes('');
-    setLocation('');
-    setEventTime('');
-    setContactName('');
-    setContactInfo('');
+    setCurrentStep("intro");
+    setVerificationUrl("");
+    setVerificationNotes("");
+    setLocation("");
+    setEventTime("");
+    setContactName("");
+    setContactInfo("");
     setError(null);
   };
 
@@ -44,58 +55,63 @@ export function VerificationModal({ isOpen, onClose, todo, onSuccess }: Verifica
 
   const getVerificationTypeInfo = () => {
     switch (todo.verificationType) {
-      case 'SOCIAL_POST':
+      case "SOCIAL_POST":
         return {
-          title: 'Social Post Verification',
-          icon: '📱',
-          description: 'Share the link to your social media post',
+          title: "Social Post Verification",
+          icon: "📱",
+          description: "Share the link to your social media post",
           examples: [
-            'Instagram: https://instagram.com/p/ABC123xyz/',
-            'Twitter/X: https://twitter.com/username/status/123456',
-            'TikTok: https://tiktok.com/@username/video/123456',
+            "Instagram: https://instagram.com/p/ABC123xyz/",
+            "Twitter/X: https://twitter.com/username/status/123456",
+            "TikTok: https://tiktok.com/@username/video/123456",
           ],
-          placeholder: 'https://instagram.com/p/... or https://twitter.com/...',
-          helpText: 'Copy the link directly from your post. Make sure the post is public so we can verify it.',
+          placeholder: "https://instagram.com/p/... or https://twitter.com/...",
+          helpText:
+            "Copy the link directly from your post. Make sure the post is public so we can verify it.",
         };
-      case 'IN_PERSON_EVENT':
+      case "IN_PERSON_EVENT":
         return {
-          title: 'Event Check-in Verification',
-          icon: '📍',
-          description: 'Confirm your attendance at the event',
+          title: "Event Check-in Verification",
+          icon: "📍",
+          description: "Confirm your attendance at the event",
           examples: [],
-          placeholder: 'Optional: Link to photo, receipt, or confirmation',
-          helpText: 'Provide details about the event and any proof of attendance (photos, receipts, etc.)',
+          placeholder: "Optional: Link to photo, receipt, or confirmation",
+          helpText:
+            "Provide details about the event and any proof of attendance (photos, receipts, etc.)",
         };
-      case 'COMMERCIAL_VIDEO':
+      case "COMMERCIAL_VIDEO":
         return {
-          title: 'Commercial Video Verification',
-          icon: '🎬',
-          description: 'Share the link to your commercial video',
+          title: "Commercial Video Verification",
+          icon: "🎬",
+          description: "Share the link to your commercial video",
           examples: [
-            'YouTube: https://youtube.com/watch?v=ABC123',
-            'Vimeo: https://vimeo.com/123456789',
-            'Other: Any video hosting platform link',
+            "YouTube: https://youtube.com/watch?v=ABC123",
+            "Vimeo: https://vimeo.com/123456789",
+            "Other: Any video hosting platform link",
           ],
-          placeholder: 'https://youtube.com/watch?v=... or https://vimeo.com/...',
-          helpText: 'Share the public link to your commercial video. Make sure it\'s accessible for review.',
+          placeholder:
+            "https://youtube.com/watch?v=... or https://vimeo.com/...",
+          helpText:
+            "Share the public link to your commercial video. Make sure it's accessible for review.",
         };
-      case 'OTHER':
+      case "OTHER":
         return {
-          title: 'Verification Submission',
-          icon: '✅',
-          description: 'Provide proof of completion',
+          title: "Verification Submission",
+          icon: "✅",
+          description: "Provide proof of completion",
           examples: [],
-          placeholder: 'https://... or any verification link',
-          helpText: 'Share any link or document that proves you completed this task.',
+          placeholder: "https://... or any verification link",
+          helpText:
+            "Share any link or document that proves you completed this task.",
         };
       default:
         return {
-          title: 'Verification',
-          icon: '✓',
-          description: 'Provide verification',
+          title: "Verification",
+          icon: "✓",
+          description: "Provide verification",
           examples: [],
-          placeholder: 'https://...',
-          helpText: 'Share a link or provide details',
+          placeholder: "https://...",
+          helpText: "Share a link or provide details",
         };
     }
   };
@@ -103,23 +119,25 @@ export function VerificationModal({ isOpen, onClose, todo, onSuccess }: Verifica
   const typeInfo = getVerificationTypeInfo();
 
   const validateInput = () => {
-    if (todo.verificationType === 'IN_PERSON_EVENT') {
+    if (todo.verificationType === "IN_PERSON_EVENT") {
       // For events, require either notes or URL
       if (!verificationNotes.trim() && !verificationUrl.trim()) {
-        setError('Please provide event details or a verification link');
+        setError("Please provide event details or a verification link");
         return false;
       }
     } else {
       // For other types, require URL
       if (!verificationUrl.trim()) {
-        setError('Please provide a verification link');
+        setError("Please provide a verification link");
         return false;
       }
       // Basic URL validation
       try {
         new URL(verificationUrl);
       } catch {
-        setError('Please enter a valid URL (must start with http:// or https://)');
+        setError(
+          "Please enter a valid URL (must start with http:// or https://)"
+        );
         return false;
       }
     }
@@ -128,20 +146,20 @@ export function VerificationModal({ isOpen, onClose, todo, onSuccess }: Verifica
   };
 
   const handleNext = () => {
-    if (currentStep === 'intro') {
-      setCurrentStep('input');
-    } else if (currentStep === 'input') {
+    if (currentStep === "intro") {
+      setCurrentStep("input");
+    } else if (currentStep === "input") {
       if (validateInput()) {
-        setCurrentStep('review');
+        setCurrentStep("review");
       }
     }
   };
 
   const handleBack = () => {
-    if (currentStep === 'review') {
-      setCurrentStep('input');
-    } else if (currentStep === 'input') {
-      setCurrentStep('intro');
+    if (currentStep === "review") {
+      setCurrentStep("input");
+    } else if (currentStep === "input") {
+      setCurrentStep("intro");
     }
   };
 
@@ -152,16 +170,16 @@ export function VerificationModal({ isOpen, onClose, todo, onSuccess }: Verifica
     try {
       // For in-person events, combine location/time/contact into notes if provided
       let finalNotes = verificationNotes;
-      if (todo.verificationType === 'IN_PERSON_EVENT') {
+      if (todo.verificationType === "IN_PERSON_EVENT") {
         const eventDetails = [];
         if (location) eventDetails.push(`Location: ${location}`);
         if (eventTime) eventDetails.push(`Time: ${eventTime}`);
         if (contactName) eventDetails.push(`Contact: ${contactName}`);
         if (contactInfo) eventDetails.push(`Contact Info: ${contactInfo}`);
         if (verificationNotes) eventDetails.push(`Notes: ${verificationNotes}`);
-        
+
         if (eventDetails.length > 0) {
-          finalNotes = eventDetails.join('\n');
+          finalNotes = eventDetails.join("\n");
         }
       }
 
@@ -170,14 +188,18 @@ export function VerificationModal({ isOpen, onClose, todo, onSuccess }: Verifica
         verificationNotes: finalNotes || undefined,
       });
 
-      setCurrentStep('success');
+      setCurrentStep("success");
       setTimeout(() => {
         onSuccess();
         handleClose();
       }, 2000);
     } catch (err) {
-      console.error('Failed to verify todo:', err);
-      setError(err instanceof Error ? err.message : 'Failed to submit verification. Please try again.');
+      console.error("Failed to verify todo:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to submit verification. Please try again."
+      );
       setIsSubmitting(false);
     }
   };
@@ -187,28 +209,38 @@ export function VerificationModal({ isOpen, onClose, todo, onSuccess }: Verifica
   return (
     <div className="verification-modal-overlay" onClick={handleClose}>
       <div className="verification-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="verification-modal-close" onClick={handleClose} aria-label="Close">
+        <button
+          className="verification-modal-close"
+          onClick={handleClose}
+          aria-label="Close"
+        >
           ×
         </button>
 
         {/* Progress Indicator */}
         <div className="verification-progress">
-          <div className={`progress-step ${currentStep === 'intro' ? 'active' : currentStep !== 'intro' ? 'completed' : ''}`}>
+          <div
+            className={`progress-step ${currentStep === "intro" ? "active" : "completed"}`}
+          >
             <div className="progress-step-number">1</div>
             <div className="progress-step-label">Overview</div>
           </div>
-          <div className={`progress-step ${currentStep === 'input' ? 'active' : currentStep === 'review' || currentStep === 'success' ? 'completed' : ''}`}>
+          <div
+            className={`progress-step ${currentStep === "input" ? "active" : currentStep === "review" || currentStep === "success" ? "completed" : ""}`}
+          >
             <div className="progress-step-number">2</div>
             <div className="progress-step-label">Details</div>
           </div>
-          <div className={`progress-step ${currentStep === 'review' ? 'active' : currentStep === 'success' ? 'completed' : ''}`}>
+          <div
+            className={`progress-step ${currentStep === "review" ? "active" : currentStep === "success" ? "completed" : ""}`}
+          >
             <div className="progress-step-number">3</div>
             <div className="progress-step-label">Review</div>
           </div>
         </div>
 
         {/* Step 1: Intro */}
-        {currentStep === 'intro' && (
+        {currentStep === "intro" && (
           <div className="verification-step">
             <div className="verification-step-header">
               <div className="verification-icon">{typeInfo.icon}</div>
@@ -219,28 +251,30 @@ export function VerificationModal({ isOpen, onClose, todo, onSuccess }: Verifica
             <div className="verification-info-box">
               <h3 className="info-box-title">What you'll need:</h3>
               <ul className="info-box-list">
-                {todo.verificationType === 'SOCIAL_POST' && (
+                {todo.verificationType === "SOCIAL_POST" && (
                   <>
-                    <li>Your social media post (Instagram, Twitter, TikTok, etc.)</li>
+                    <li>
+                      Your social media post (Instagram, Twitter, TikTok, etc.)
+                    </li>
                     <li>The public link to your post</li>
                     <li>Make sure the post is set to public</li>
                   </>
                 )}
-                {todo.verificationType === 'IN_PERSON_EVENT' && (
+                {todo.verificationType === "IN_PERSON_EVENT" && (
                   <>
                     <li>Event location and time</li>
                     <li>Contact person name (if applicable)</li>
                     <li>Optional: Photo, receipt, or confirmation document</li>
                   </>
                 )}
-                {todo.verificationType === 'COMMERCIAL_VIDEO' && (
+                {todo.verificationType === "COMMERCIAL_VIDEO" && (
                   <>
                     <li>Your published commercial video</li>
                     <li>The public link to the video</li>
                     <li>Make sure the video is accessible</li>
                   </>
                 )}
-                {todo.verificationType === 'OTHER' && (
+                {todo.verificationType === "OTHER" && (
                   <>
                     <li>Any proof of completion</li>
                     <li>Link to document, photo, or other verification</li>
@@ -274,10 +308,12 @@ export function VerificationModal({ isOpen, onClose, todo, onSuccess }: Verifica
         )}
 
         {/* Step 2: Input */}
-        {currentStep === 'input' && (
+        {currentStep === "input" && (
           <div className="verification-step">
             <div className="verification-step-header">
-              <h2 className="verification-title">Provide Verification Details</h2>
+              <h2 className="verification-title">
+                Provide Verification Details
+              </h2>
               <p className="verification-description">{typeInfo.helpText}</p>
             </div>
 
@@ -289,7 +325,7 @@ export function VerificationModal({ isOpen, onClose, todo, onSuccess }: Verifica
             )}
 
             <div className="verification-form">
-              {todo.verificationType !== 'IN_PERSON_EVENT' ? (
+              {todo.verificationType !== "IN_PERSON_EVENT" ? (
                 <>
                   <div className="form-group">
                     <label className="form-label">
@@ -306,11 +342,15 @@ export function VerificationModal({ isOpen, onClose, todo, onSuccess }: Verifica
                       }}
                       disabled={isSubmitting}
                     />
-                    <small className="form-hint">Paste the complete URL here</small>
+                    <small className="form-hint">
+                      Paste the complete URL here
+                    </small>
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Additional Notes (Optional)</label>
+                    <label className="form-label">
+                      Additional Notes (Optional)
+                    </label>
                     <textarea
                       className="form-textarea"
                       placeholder="Add any additional context or information..."
@@ -377,7 +417,9 @@ export function VerificationModal({ isOpen, onClose, todo, onSuccess }: Verifica
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Verification Link (Optional)</label>
+                    <label className="form-label">
+                      Verification Link (Optional)
+                    </label>
                     <input
                       type="url"
                       className="form-input"
@@ -389,7 +431,10 @@ export function VerificationModal({ isOpen, onClose, todo, onSuccess }: Verifica
                       }}
                       disabled={isSubmitting}
                     />
-                    <small className="form-hint">Optional: Share a link to photos, receipts, or confirmation documents</small>
+                    <small className="form-hint">
+                      Optional: Share a link to photos, receipts, or
+                      confirmation documents
+                    </small>
                   </div>
 
                   <div className="form-group">
@@ -408,17 +453,27 @@ export function VerificationModal({ isOpen, onClose, todo, onSuccess }: Verifica
                       rows={4}
                       required
                     />
-                    <small className="form-hint">Provide details about your attendance at the event</small>
+                    <small className="form-hint">
+                      Provide details about your attendance at the event
+                    </small>
                   </div>
                 </>
               )}
             </div>
 
             <div className="verification-step-actions">
-              <button className="btn-secondary" onClick={handleBack} disabled={isSubmitting}>
+              <button
+                className="btn-secondary"
+                onClick={handleBack}
+                disabled={isSubmitting}
+              >
                 ← Back
               </button>
-              <button className="btn-primary" onClick={handleNext} disabled={isSubmitting}>
+              <button
+                className="btn-primary"
+                onClick={handleNext}
+                disabled={isSubmitting}
+              >
                 Continue to Review →
               </button>
             </div>
@@ -426,11 +481,13 @@ export function VerificationModal({ isOpen, onClose, todo, onSuccess }: Verifica
         )}
 
         {/* Step 3: Review */}
-        {currentStep === 'review' && (
+        {currentStep === "review" && (
           <div className="verification-step">
             <div className="verification-step-header">
               <h2 className="verification-title">Review Your Submission</h2>
-              <p className="verification-description">Please review your verification details before submitting</p>
+              <p className="verification-description">
+                Please review your verification details before submitting
+              </p>
             </div>
 
             <div className="verification-review">
@@ -453,7 +510,7 @@ export function VerificationModal({ isOpen, onClose, todo, onSuccess }: Verifica
                 </div>
               )}
 
-              {todo.verificationType === 'IN_PERSON_EVENT' && (
+              {todo.verificationType === "IN_PERSON_EVENT" && (
                 <>
                   {location && (
                     <div className="review-section">
@@ -471,7 +528,9 @@ export function VerificationModal({ isOpen, onClose, todo, onSuccess }: Verifica
                     <div className="review-section">
                       <h3 className="review-section-title">Contact Person</h3>
                       <p className="review-value">{contactName}</p>
-                      {contactInfo && <p className="review-value-small">{contactInfo}</p>}
+                      {contactInfo && (
+                        <p className="review-value-small">{contactInfo}</p>
+                      )}
                     </div>
                   )}
                 </>
@@ -480,13 +539,19 @@ export function VerificationModal({ isOpen, onClose, todo, onSuccess }: Verifica
               {verificationNotes && (
                 <div className="review-section">
                   <h3 className="review-section-title">Additional Details</h3>
-                  <p className="review-value review-text">{verificationNotes}</p>
+                  <p className="review-value review-text">
+                    {verificationNotes}
+                  </p>
                 </div>
               )}
             </div>
 
             <div className="verification-step-actions">
-              <button className="btn-secondary" onClick={handleBack} disabled={isSubmitting}>
+              <button
+                className="btn-secondary"
+                onClick={handleBack}
+                disabled={isSubmitting}
+              >
                 ← Edit
               </button>
               <button
@@ -494,22 +559,26 @@ export function VerificationModal({ isOpen, onClose, todo, onSuccess }: Verifica
                 onClick={handleSubmit}
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Submitting...' : '✓ Submit Verification'}
+                {isSubmitting ? "Submitting..." : "✓ Submit Verification"}
               </button>
             </div>
           </div>
         )}
 
         {/* Step 4: Success */}
-        {currentStep === 'success' && (
+        {currentStep === "success" && (
           <div className="verification-step verification-success">
             <div className="success-icon">✓</div>
             <h2 className="verification-title">Verification Submitted!</h2>
             <p className="verification-description">
-              Your verification has been submitted successfully. The task has been marked as completed.
+              Your verification has been submitted successfully. The task has
+              been marked as completed.
             </p>
             <div className="success-message">
-              <p>You can close this window. The admin will review your submission.</p>
+              <p>
+                You can close this window. The admin will review your
+                submission.
+              </p>
             </div>
           </div>
         )}
@@ -517,4 +586,3 @@ export function VerificationModal({ isOpen, onClose, todo, onSuccess }: Verifica
     </div>
   );
 }
-

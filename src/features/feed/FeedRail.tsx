@@ -63,7 +63,7 @@ function AIChatbotCTA() {
       <h3 className="feed-rail-title">Need help?</h3>
       <p className="feed-rail-text">
         Chat with our AI NIL assistant to find the right athlete, explore
-        campaign ideas, or get answers about Texas HS NIL rules.
+        campaign ideas, or get answers about High School NIL rules.
       </p>
       <button className="feed-rail-chatbot-btn" onClick={openChatbot}>
         <svg

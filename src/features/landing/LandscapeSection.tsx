@@ -41,10 +41,7 @@ export function LandscapeSection() {
       style={{ background: "#05070d", color: colors.white, padding: "96px 0" }}
     >
       <div style={containerStyle}>
-        <Heading
-          title="The Texas Landscape"
-          subtitle="Understanding the game"
-        />
+        <Heading title="The Landscape" subtitle="Understanding the game" />
         <div
           style={{
             display: "grid",

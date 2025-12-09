@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  type ReactNode,
+} from "react";
 
 export interface SocialProfile {
   id?: string;
@@ -69,6 +75,9 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   isProfileComplete: boolean;
+  isGuest: boolean;
+  setGuestMode: (isGuest: boolean) => void;
+  exitGuestMode: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -77,16 +86,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isGuest, setIsGuest] = useState<boolean>(() => {
+    return localStorage.getItem("guestMode") === "true";
+  });
 
   const refreshUser = async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       // For development: get userId from localStorage or mock it
       // In production, this would come from session/JWT
-      const userId = localStorage.getItem('userId');
-      
+      const userId = localStorage.getItem("userId");
+
       if (!userId) {
         setUser(null);
         setLoading(false);
@@ -94,46 +106,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // Add userId to headers for mock auth
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/auth/me`, {
-        headers: {
-          'x-user-id': userId,
-        },
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || "http://localhost:4000"}/api/auth/me`,
+        {
+          headers: {
+            "x-user-id": userId,
+          },
+        }
+      );
 
       if (!response.ok) {
         if (response.status === 401) {
-          localStorage.removeItem('userId');
+          localStorage.removeItem("userId");
           setUser(null);
           setLoading(false);
           return;
         }
-        throw new Error('Failed to fetch user');
+        throw new Error("Failed to fetch user");
       }
 
       const userData = await response.json();
       setUser(userData);
     } catch (err) {
-      console.error('Auth refresh error:', err);
-      setError(err instanceof Error ? err.message : 'Authentication error');
+      console.error("Auth refresh error:", err);
+      setError(err instanceof Error ? err.message : "Authentication error");
       setUser(null);
     } finally {
       setLoading(false);
     }
   };
 
+  const setGuestMode = (guest: boolean) => {
+    setIsGuest(guest);
+    if (guest) {
+      localStorage.setItem("guestMode", "true");
+    } else {
+      localStorage.removeItem("guestMode");
+    }
+  };
+
+  const exitGuestMode = () => {
+    setIsGuest(false);
+    localStorage.removeItem("guestMode");
+  };
+
   const logout = () => {
-    localStorage.removeItem('userId');
+    localStorage.removeItem("userId");
     setUser(null);
     setError(null);
+    // Don't clear guest mode on logout - let user continue browsing as guest
   };
 
   useEffect(() => {
-    refreshUser();
-  }, []);
+    // Only refresh user if not in guest mode
+    if (!isGuest) {
+      refreshUser();
+    } else {
+      setLoading(false);
+    }
+  }, [isGuest]);
 
-  const isAuthenticated = !!user;
+  const isAuthenticated = !!user && !isGuest;
   // Admins and other non-athlete roles don't need onboarding
-  const isProfileComplete = user?.role !== 'ATHLETE' ? true : (user?.profileComplete ?? false);
+  const isProfileComplete =
+    user?.role !== "ATHLETE" ? true : (user?.profileComplete ?? false);
 
   return (
     <AuthContext.Provider
@@ -146,6 +182,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         isAuthenticated,
         isProfileComplete,
+        isGuest,
+        setGuestMode,
+        exitGuestMode,
       }}
     >
       {children}
@@ -156,8 +195,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
-

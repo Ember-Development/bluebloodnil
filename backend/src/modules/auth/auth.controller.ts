@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import { randomBytes } from "crypto";
 import { prisma } from "../../config/prisma";
 import { AuthRequest } from "../../middleware/auth.middleware";
@@ -145,7 +145,7 @@ export async function requestMagicLink(req: Request, res: Response) {
 
 export async function verifyMagicLink(req: Request, res: Response) {
   try {
-    const token = (req as any).params?.token;
+    const token = req.params?.token;
 
     if (!token) {
       return res.status(400).json({ error: "Token is required" });

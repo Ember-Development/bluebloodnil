@@ -23,7 +23,7 @@ interface Notification {
 
 export function Layout() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, isGuest } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -173,28 +173,30 @@ export function Layout() {
           </Link>
 
           <div className="layout-user-actions">
-            <button
-              className="layout-notification-btn"
-              onClick={() => setShowNotifications(!showNotifications)}
-              aria-label="Notifications"
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
+            {!isGuest && (
+              <button
+                className="layout-notification-btn"
+                onClick={() => setShowNotifications(!showNotifications)}
+                aria-label="Notifications"
               >
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-              </svg>
-              {unreadCount > 0 && (
-                <span className="layout-notification-badge">
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </span>
-              )}
-            </button>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+                {unreadCount > 0 && (
+                  <span className="layout-notification-badge">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </button>
+            )}
             <button
               className="layout-settings-btn"
               onClick={() => setShowSettings(!showSettings)}
@@ -217,7 +219,7 @@ export function Layout() {
 
         <nav className="layout-nav">
           <p className="layout-nav-label">Navigate</p>
-          {myProfilePath && (
+          {!isGuest && myProfilePath && (
             <NavLink
               to={myProfilePath}
               className={({ isActive }) =>
@@ -231,8 +233,11 @@ export function Layout() {
           )}
           {links
             .filter((link) => {
-              // Hide Admin link for athletes
-              if (link.to === "/admin" && user?.role === "ATHLETE") {
+              // Hide Admin link for guests and athletes
+              if (
+                link.to === "/admin" &&
+                (isGuest || user?.role === "ATHLETE")
+              ) {
                 return false;
               }
               return true;
@@ -254,7 +259,7 @@ export function Layout() {
 
         <div className="layout-sidebar-bottom">
           {/* User Info Box */}
-          {user && (
+          {!isGuest && user && (
             <div className="layout-user-info">
               <div className="layout-user-avatar">
                 {user.athlete?.avatarUrl ? (
@@ -289,26 +294,47 @@ export function Layout() {
             </div>
           )}
 
-          <button className="layout-logout-btn" onClick={handleLogout}>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
+          {isGuest ? (
+            <button
+              className="layout-logout-btn"
+              onClick={() => navigate("/login")}
             >
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-            <span>Logout</span>
-          </button>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                <polyline points="10 17 15 12 10 7" />
+                <line x1="15" y1="12" x2="3" y2="12" />
+              </svg>
+              <span>Login</span>
+            </button>
+          ) : (
+            <button className="layout-logout-btn" onClick={handleLogout}>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              <span>Logout</span>
+            </button>
+          )}
         </div>
       </aside>
 
       {/* Notifications Dropdown */}
-      {showNotifications && (
+      {!isGuest && showNotifications && (
         <div className="layout-notifications-dropdown">
           <div className="layout-notifications-header">
             <h3>Notifications</h3>
@@ -356,18 +382,37 @@ export function Layout() {
       {/* Settings Dropdown */}
       {showSettings && (
         <div className="layout-settings-dropdown">
-          <div className="layout-settings-item">
-            <span>Settings</span>
-            <span style={{ fontSize: "0.8rem", color: "var(--color-muted)" }}>
-              Coming soon
-            </span>
-          </div>
-          <div className="layout-settings-item">
-            <span>Account</span>
-            <span style={{ fontSize: "0.8rem", color: "var(--color-muted)" }}>
-              Coming soon
-            </span>
-          </div>
+          {isGuest ? (
+            <div
+              className="layout-settings-item"
+              style={{ cursor: "pointer" }}
+              onClick={() => {
+                navigate("/login");
+                setShowSettings(false);
+              }}
+            >
+              <span>Login</span>
+            </div>
+          ) : (
+            <>
+              <div className="layout-settings-item">
+                <span>Settings</span>
+                <span
+                  style={{ fontSize: "0.8rem", color: "var(--color-muted)" }}
+                >
+                  Coming soon
+                </span>
+              </div>
+              <div className="layout-settings-item">
+                <span>Account</span>
+                <span
+                  style={{ fontSize: "0.8rem", color: "var(--color-muted)" }}
+                >
+                  Coming soon
+                </span>
+              </div>
+            </>
+          )}
         </div>
       )}
 

@@ -4,6 +4,7 @@ import { colors, containerStyle, fonts } from "./shared";
 export function CTASection() {
   return (
     <section
+      className="section-padding"
       style={{
         background: "#080c18",
         padding: "96px 0",

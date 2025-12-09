@@ -7,7 +7,7 @@ import "./VerifyMagicLinkPage.css";
 export function VerifyMagicLinkPage() {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
-  const { refreshUser } = useAuth();
+  const { refreshUser, exitGuestMode } = useAuth();
   const [status, setStatus] = useState<"verifying" | "success" | "error">(
     "verifying"
   );
@@ -32,6 +32,9 @@ export function VerifyMagicLinkPage() {
         if (response.success) {
           // Store userId in localStorage (in production, use proper JWT tokens)
           localStorage.setItem("userId", response.userId);
+
+          // Clear guest mode when user logs in
+          exitGuestMode();
 
           // Refresh user data
           await refreshUser();

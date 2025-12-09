@@ -1,8 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiClient } from "../lib/apiClient";
+import { useAuth } from "../contexts/AuthContext";
 import "./LoginPage.css";
 
 export function LoginPage() {
+  const navigate = useNavigate();
+  const { setGuestMode } = useAuth();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{
@@ -72,6 +76,39 @@ export function LoginPage() {
             {loading ? "Sending..." : "Send Magic Link"}
           </button>
         </form>
+
+        <div style={{ marginTop: "24px", textAlign: "center" }}>
+          <button
+            type="button"
+            onClick={() => {
+              setGuestMode(true);
+              navigate("/feed");
+            }}
+            className="btn-secondary"
+            style={{
+              width: "100%",
+              padding: "12px 24px",
+              background: "transparent",
+              border: "1px solid rgba(98, 183, 255, 0.4)",
+              color: "#62b7ff",
+              borderRadius: "8px",
+              fontSize: "0.95rem",
+              fontWeight: 500,
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(98, 183, 255, 0.1)";
+              e.currentTarget.style.borderColor = "rgba(98, 183, 255, 0.6)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.borderColor = "rgba(98, 183, 255, 0.4)";
+            }}
+          >
+            Browse as Guest
+          </button>
+        </div>
 
         <div className="login-footer">
           <p className="login-help-text">

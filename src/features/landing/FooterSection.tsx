@@ -28,6 +28,7 @@ export function LandingFooter() {
     >
       <div style={containerStyle}>
         <div
+          className="footer-grid"
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
@@ -84,6 +85,7 @@ export function LandingFooter() {
           ))}
         </div>
         <div
+          className="footer-bottom"
           style={{
             borderTop: "1px solid rgba(255,255,255,0.08)",
             paddingTop: 18,

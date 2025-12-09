@@ -1,23 +1,27 @@
-# Use Node 20 (change if your project uses a specific version)
+# Dockerfile
 FROM node:20-alpine
 
-# Set app directory
+# Create app directory
 WORKDIR /app
 
-# Copy package files
+# Install all deps (including devDependencies for build)
 COPY package*.json ./
+RUN npm ci
 
-# Install dependencies (use pnpm/yarn if that’s what you’re using)
-RUN npm ci --omit=dev
-
-# Copy the rest of the backend source
+# Copy the rest of the source
 COPY . .
 
-# If you build TypeScript, uncomment:
-# RUN npm run build
+# Generate Prisma client
+RUN npx prisma generate
+
+# Build TypeScript / bundler output → dist/
+RUN npm run build
+
+# Remove devDependencies to reduce image size (optional but recommended)
+RUN npm prune --production
 
 # Expose the port your app listens on
-EXPOSE 3000
+EXPOSE 4000
 
-# Start the app (change to your real start command)
-CMD ["npm", "start"]
+# Start command – should match your package.json "start"
+CMD ["npm", "run", "start"]

@@ -39,23 +39,17 @@ export function Navigation() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div
+          <img
+            src="https://firebasestorage.googleapis.com/v0/b/goatnet-4a76f.firebasestorage.app/o/Software%2FBluebloods%20Site%20Logo.png?alt=media&token=7dd96b2e-f66f-4b4e-b708-feb54e6883e1"
+            alt="Bluebloods Logo"
             style={{
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: `linear-gradient(135deg, ${colors.carolinaSoft}, ${colors.carolinaDark})`,
-              color: "#041023",
-              fontFamily: fonts.display,
-              fontWeight: 800,
-              fontSize: 20,
-              display: "grid",
-              placeItems: "center",
+              objectFit: "cover",
               boxShadow: "0 12px 28px rgba(0,0,0,0.35)",
             }}
-          >
-            BB
-          </div>
+          />
           <div style={{ lineHeight: 1.1 }}>
             <div
               style={{
@@ -65,7 +59,7 @@ export function Navigation() {
                 letterSpacing: "0.04em",
               }}
             >
-              BOMBERS
+              BLUEBLOODS
             </div>
             <small
               style={{
@@ -76,7 +70,7 @@ export function Navigation() {
                 letterSpacing: "0.3em",
               }}
             >
-              Collective
+              NIL Program
             </small>
           </div>
         </div>
